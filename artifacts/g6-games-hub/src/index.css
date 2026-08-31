@@ -161,6 +161,8 @@ button { cursor: pointer; }
 .network-card:nth-child(2) { grid-column: span 5; background: #12100c; }
 .network-card:nth-child(3) { grid-column: span 5; background: #121016; }
 .network-card:nth-child(4) { grid-column: span 7; background: #0e1515; }
+.network-card:nth-child(5) { grid-column: span 12; background: #10131b; }
+.network-card.kinetic { background: #10131b; }
 .network-card .card-no { font: 10px var(--app-font-mono); color: hsl(var(--primary)); }
 .network-card h3 { margin: 20px 0 7px; font: 700 clamp(26px, 4vw, 45px)/.9 'Syne'; letter-spacing: -.08em; }
 .network-card p { color: hsl(var(--muted-foreground)); font-size: 12px; max-width: 310px; margin: 0; line-height: 1.5; }
@@ -187,6 +189,7 @@ button { cursor: pointer; }
 .game-tile.lokbook::before { background: repeating-linear-gradient(110deg, transparent, transparent 24px, rgba(241, 224, 186, .05) 25px, transparent 26px); }
 .game-tile.loklingu::before { background: radial-gradient(circle at 80% 80%, rgba(202, 70, 160, .23), transparent 38%); }
 .game-tile.runes::before { background: radial-gradient(circle at 14% 70%, rgba(65, 205, 190, .2), transparent 40%); }
+.game-tile.kinetic::before { background: repeating-linear-gradient(135deg, transparent, transparent 17px, rgba(94, 150, 255, .08) 18px, transparent 20px), radial-gradient(circle at 82% 24%, rgba(91, 145, 255, .28), transparent 34%); }
 .game-tile:hover { transform: translateY(-5px); border-color: hsl(var(--primary)); }
 .game-tile > * { position: relative; z-index: 1; }
 .tile-top { display: flex; justify-content: space-between; font: 10px var(--app-font-mono); color: hsl(var(--muted-foreground)); text-transform: uppercase; }
@@ -196,6 +199,7 @@ button { cursor: pointer; }
 .tile-bottom { display: flex; justify-content: space-between; align-items: end; }
 .tile-cta { font: 10px var(--app-font-mono); color: hsl(var(--primary)); text-transform: uppercase; letter-spacing: .12em; }
 .detail-hero { padding: 80px 0 54px; border-bottom: 1px solid hsl(var(--border)); }
+.detail-hero.kinetic { background: radial-gradient(circle at 77% 20%, rgba(91, 145, 255, .16), transparent 34%); }
 .detail-layout { display: grid; grid-template-columns: 1.08fr .92fr; gap: 65px; align-items: end; }
 .detail-hero h1 { margin: 24px 0 16px; font: 800 clamp(50px, 9vw, 115px)/.83 'Syne'; letter-spacing: -.11em; }
 .detail-hero h1 em { font-style: normal; color: transparent; -webkit-text-stroke: 1px hsl(var(--primary)); }

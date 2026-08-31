@@ -79,6 +79,17 @@ const games: Game[] = [
     signal: 'PLAYER TOOL',
     accent: 'runes',
   },
+  {
+    slug: 'kinetic-souls-classic',
+    title: 'Kinetic Souls Classic',
+    number: '05',
+    category: 'Action / Arcade',
+    description: 'A kinetic arena built around movement, timing, and the rush of finding your next opening.',
+    long: 'Keep moving, read the room, and let momentum do the talking. Kinetic Souls Classic is a compact action signal made for quick runs and repeat visits.',
+    url: 'https://kinetic-souls-classic.vercel.app/',
+    signal: 'MOTION STUDY',
+    accent: 'kinetic',
+  },
 ];
 
 function Brand() {
@@ -138,7 +149,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 }
 
 function SignalStrip() {
-  return <div className="signal-strip"><span>GSix Games Hub</span> four playable signals <span>◆</span> built for the curious <span>◆</span> share something grand <span>◆</span> chapter 0 / connect local:200</div>;
+  return <div className="signal-strip"><span>GSix Games Hub</span> five playable signals <span>◆</span> built for the curious <span>◆</span> share something grand <span>◆</span> chapter 0 / connect local:200</div>;
 }
 
 function Home() {
@@ -169,7 +180,7 @@ function Home() {
       </section>
       <section className="manifesto"><h2>Small doors.<br />Big worlds.</h2><p>GSix is a place for experiments with enough polish to become rituals. We make the kind of internet you want to return to.</p></section>
       <section className="section container-g6">
-        <div className="section-head"><div><span className="eyebrow">Network map</span><h2 className="section-title">Four ways<br />in.</h2></div><p className="section-intro">Every room has its own weather. Pick the one that sounds like your kind of night.</p></div>
+        <div className="section-head"><div><span className="eyebrow">Network map</span><h2 className="section-title">Five ways<br />in.</h2></div><p className="section-intro">Every room has its own weather. Pick the one that sounds like your kind of night.</p></div>
         <div className="network-grid">
           {games.map((game) => <Link href={`/games/${game.slug}`} className={`network-card ${game.accent}`} key={game.slug}><div><span className="card-no">{game.number} / {game.signal}</span><h3>{game.title}</h3><p>{game.description}</p></div><span className="card-arrow">↗</span></Link>)}
         </div>
@@ -185,7 +196,7 @@ function Games() {
   const [search, setSearch] = useState('');
   const filters = ['All signals', 'Narrative', 'Interface', 'Language', 'Utility'];
   const visible = games.filter((g) => (filter === 'All signals' || g.category.toLowerCase().includes(filter.toLowerCase())) && `${g.title} ${g.description}`.toLowerCase().includes(search.toLowerCase()));
-  return <Shell><main><section className="page-top container-g6"><span className="eyebrow">GSix Games / Directory</span><h1>CHOOSE<br /><span className="text-aqua">YOUR</span><br />DOOR.</h1><p>Four small worlds, each with a different frequency. Open one. Keep it open.</p></section><section className="container-g6"><div className="directory-toolbar"><div className="filter-row">{filters.map((f) => <button className={`filter-button ${filter === f ? 'active' : ''}`} key={f} onClick={() => setFilter(f)}>{f}</button>)}</div><input className="search-input" type="search" placeholder="Search the network" value={search} onChange={(e) => setSearch(e.target.value)} /></div><div className="games-list">{visible.map((game) => <GameTile game={game} key={game.slug} />)}</div>{visible.length === 0 && <div className="info-panel" style={{ marginBottom: 100 }}><h3>No signal found.</h3><p>Try a different frequency. The network is small, but it is particular.</p></div>}</section></main></Shell>;
+  return <Shell><main><section className="page-top container-g6"><span className="eyebrow">GSix Games / Directory</span><h1>CHOOSE<br /><span className="text-aqua">YOUR</span><br />DOOR.</h1><p>Five small worlds, each with a different frequency. Open one. Keep it open.</p></section><section className="container-g6"><div className="directory-toolbar"><div className="filter-row">{filters.map((f) => <button className={`filter-button ${filter === f ? 'active' : ''}`} key={f} onClick={() => setFilter(f)}>{f}</button>)}</div><input className="search-input" type="search" placeholder="Search the network" value={search} onChange={(e) => setSearch(e.target.value)} /></div><div className="games-list">{visible.map((game) => <GameTile game={game} key={game.slug} />)}</div>{visible.length === 0 && <div className="info-panel" style={{ marginBottom: 100 }}><h3>No signal found.</h3><p>Try a different frequency. The network is small, but it is particular.</p></div>}</section></main></Shell>;
 }
 
 function GameTile({ game }: { game: Game }) {
