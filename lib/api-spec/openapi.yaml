@@ -10,6 +10,10 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: games
+    description: Game social operations
 paths:
   /healthz:
     get:
@@ -24,6 +28,133 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /auth/user:
+    get:
+      operationId: getCurrentAuthUser
+      tags: [auth]
+      summary: Get the current signed-in user
+      responses:
+        "200":
+          description: Current auth state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentAuthUser"
+  /login:
+    get:
+      operationId: login
+      tags: [auth]
+      summary: Start sign-in
+      responses:
+        "302":
+          description: Redirects to the identity provider
+  /callback:
+    get:
+      operationId: authCallback
+      tags: [auth]
+      summary: Complete sign-in
+      responses:
+        "302":
+          description: Redirects back to the app
+  /logout:
+    get:
+      operationId: logout
+      tags: [auth]
+      summary: Sign out
+      responses:
+        "302":
+          description: Redirects back to the app
+  /games/stats:
+    get:
+      operationId: getGameSocialStats
+      tags: [games]
+      summary: Get aggregate stars and this browser's star state
+      parameters:
+        - name: voterId
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 120
+      responses:
+        "200":
+          description: Social stats for all registered games
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GameSocialStats"
+  /games/{slug}/star:
+    post:
+      operationId: toggleGameStar
+      tags: [games]
+      summary: Star or unstar a game for this browser
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 120
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GameStarInput"
+      responses:
+        "200":
+          description: Updated star state and aggregate count
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameSocialStats"
+        "400":
+          description: Invalid star request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /games/{slug}/feedback:
+    post:
+      operationId: submitGameFeedback
+      tags: [games]
+      summary: Send private feedback about a game
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 120
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GameFeedbackInput"
+      responses:
+        "201":
+          description: Feedback received
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedbackReceipt"
+        "400":
+          description: Invalid feedback
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +164,69 @@ components:
           type: string
       required:
         - status
+    AuthUser:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: ["string", "null"]
+        firstName:
+          type: ["string", "null"]
+        lastName:
+          type: ["string", "null"]
+        profileImageUrl:
+          type: ["string", "null"]
+      required: [id, email, firstName, lastName, profileImageUrl]
+    CurrentAuthUser:
+      type: object
+      properties:
+        user:
+          anyOf:
+            - $ref: "#/components/schemas/AuthUser"
+            - type: "null"
+      required: [user]
+    GameSocialStats:
+      type: object
+      properties:
+        gameSlug:
+          type: string
+        starCount:
+          type: number
+          minimum: 0
+        starred:
+          type: boolean
+      required: [gameSlug, starCount, starred]
+    GameStarInput:
+      type: object
+      properties:
+        voterId:
+          type: string
+          minLength: 16
+          maxLength: 120
+        starred:
+          type: boolean
+      required: [voterId, starred]
+    GameFeedbackInput:
+      type: object
+      properties:
+        content:
+          type: string
+          minLength: 4
+          maxLength: 2000
+      required: [content]
+    FeedbackReceipt:
+      type: object
+      properties:
+        received:
+          type: boolean
+        message:
+          type: string
+      required: [received, message]
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
 

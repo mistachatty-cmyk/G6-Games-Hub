@@ -6,6 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface HealthStatus {
-  status: string;
+export interface GameStarInput {
+  /**
+     * @minLength 16
+     * @maxLength 120
+     */
+  voterId: string;
+  starred: boolean;
 }

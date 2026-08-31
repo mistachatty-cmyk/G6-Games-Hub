@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, ChevronDown, ChevronRight, ExternalLink, Menu, Plus, Share2, Trash2, X } from 'lucide-react';
 import { Link, Route, Switch, useLocation, useParams, Router as WouterRouter } from 'wouter';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { getGetGameSocialStatsQueryKey, useGetGameSocialStats, useSubmitGameFeedback, useToggleGameStar, type GameSocialStats } from '@workspace/api-client-react';
+import { useAuth } from '@workspace/replit-auth-web';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -34,6 +36,47 @@ const adsenseSlots = {
   rail: import.meta.env.VITE_ADSENSE_SLOT_RAIL as string | undefined,
   bottom: import.meta.env.VITE_ADSENSE_SLOT_BOTTOM as string | undefined,
 };
+
+const VOTER_ID_KEY = 'g6-voter-id';
+
+function getVoterId() {
+  const existing = localStorage.getItem(VOTER_ID_KEY);
+  if (existing) return existing;
+  const generated = globalThis.crypto?.randomUUID?.() ?? `g6-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  localStorage.setItem(VOTER_ID_KEY, generated);
+  return generated;
+}
+
+function useGameSocial() {
+  const [voterId] = useState(getVoterId);
+  const statsQuery = useGetGameSocialStats({ voterId });
+  const starMutation = useToggleGameStar({
+    mutation: {
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetGameSocialStatsQueryKey({ voterId }) }),
+    },
+  });
+  return {
+    ...statsQuery,
+    voterId,
+    starMutation,
+    getStat: (slug: string) => statsQuery.data?.find((item) => item.gameSlug === slug),
+    toggleStar: (slug: string, starred: boolean) => starMutation.mutate({ slug, data: { voterId, starred } }),
+  };
+}
+
+function StarButton({ stat, onToggle, pending = false }: { stat?: GameSocialStats; onToggle: () => void; pending?: boolean }) {
+  return <button
+    type="button"
+    className={`star-button ${stat?.starred ? 'starred' : ''}`}
+    aria-label={stat?.starred ? 'Remove your star' : 'Star this game'}
+    aria-pressed={stat?.starred ?? false}
+    disabled={pending}
+    onClick={(event) => { event.preventDefault(); event.stopPropagation(); onToggle(); }}
+  >
+    <span aria-hidden="true">★</span>
+    <span>{stat ? stat.starCount : '—'}</span>
+  </button>;
+}
 
 function AdSlot({ label, slot, className = '' }: { label: string; slot?: string; className?: string }) {
   const live = Boolean(adsenseClient && slot);
@@ -172,15 +215,16 @@ function Games() {
   const [search, setSearch] = useState('');
   const filters = ['All signals', 'Narrative', 'Interface', 'Language', 'Utility', 'Action'];
   const visible = games.filter((g) => (filter === 'All signals' || g.category.toLowerCase().includes(filter.toLowerCase())) && `${g.title} ${g.description}`.toLowerCase().includes(search.toLowerCase()));
-  return <Shell><main><section className="page-top container-g6"><span className="eyebrow">GSix Games / Directory</span><h1>CHOOSE<br /><span className="text-aqua">YOUR</span><br />DOOR.</h1><p>Six small worlds, each with a different frequency. Open one. Keep it open.</p></section><section className="container-g6"><div className="directory-toolbar"><div className="filter-row">{filters.map((f) => <button className={`filter-button ${filter === f ? 'active' : ''}`} key={f} onClick={() => setFilter(f)}>{f}</button>)}</div><input className="search-input" type="search" placeholder="Search the network" value={search} onChange={(e) => setSearch(e.target.value)} /></div><div className="games-list">{visible.map((game) => <GameTile game={game} key={game.slug} />)}</div>{visible.length === 0 && <div className="info-panel" style={{ marginBottom: 100 }}><h3>No signal found.</h3><p>Try a different frequency. The network is small, but it is particular.</p></div>}</section></main></Shell>;
+  const social = useGameSocial();
+  return <Shell><main><section className="page-top container-g6"><span className="eyebrow">GSix Games / Directory</span><h1>CHOOSE<br /><span className="text-aqua">YOUR</span><br />DOOR.</h1><p>Six small worlds, each with a different frequency. Open one. Keep it open.</p></section><section className="container-g6"><div className="directory-toolbar"><div className="filter-row">{filters.map((f) => <button className={`filter-button ${filter === f ? 'active' : ''}`} key={f} onClick={() => setFilter(f)}>{f}</button>)}</div><input className="search-input" type="search" placeholder="Search the network" value={search} onChange={(e) => setSearch(e.target.value)} /></div>{social.isError && <p className="social-status error">Community signals are offline. You can still enter every door.</p>}<div className="games-list">{visible.map((game) => <GameTile game={game} stat={social.getStat(game.slug)} pending={social.starMutation.isPending} onToggle={() => social.toggleStar(game.slug, !social.getStat(game.slug)?.starred)} key={game.slug} />)}</div>{visible.length === 0 && <div className="info-panel" style={{ marginBottom: 100 }}><h3>No signal found.</h3><p>Try a different frequency. The network is small, but it is particular.</p></div>}</section></main></Shell>;
 }
 
-function GameTile({ game }: { game: Game }) {
-  return <Link href={gameDetailPath(game.slug)} className={`game-tile ${game.accent}`}><div className="tile-top"><span>{game.number} / {game.signal}</span><span>{game.category.split(' / ')[0]}</span></div><div><h2>{game.title}</h2><p>{game.description}</p></div><div className="tile-bottom"><span className="tile-cta">Open transmission <ArrowUpRight size={14} style={{ verticalAlign: 'middle' }} /></span><span className="text-dim font-mono" style={{ fontSize: 11 }}>g6.games</span></div></Link>;
+function GameTile({ game, stat, onToggle, pending }: { game: Game; stat?: GameSocialStats; onToggle: () => void; pending: boolean }) {
+  return <Link href={gameDetailPath(game.slug)} className={`game-tile ${game.accent}`}><div className="tile-top"><span>{game.number} / {game.signal}</span><span>{game.category.split(' / ')[0]}</span></div><div><h2>{game.title}</h2><p>{game.description}</p></div><div className="tile-bottom"><span className="tile-cta">Open transmission <ArrowUpRight size={14} style={{ verticalAlign: 'middle' }} /></span><span className="tile-actions"><StarButton stat={stat} onToggle={onToggle} pending={pending} /><span className="text-dim font-mono" style={{ fontSize: 11 }}>g6.games</span></span></div></Link>;
 }
 
-function GameHero({ game, onShare }: { game: Game; onShare: () => void }) {
-  return <section className={`detail-hero ${game.accent}`}><div className="container-g6 detail-layout"><div><span className="eyebrow">{game.number} / {game.signal}</span><h1>{game.title.split(' ')[0]}<br /><em>{game.title.split(' ').slice(1).join(' ')}</em></h1><p className="detail-summary">{game.long}</p><div className="hero-ctas"><a href="#launch" className="button-primary">Launch game <ExternalLink size={14} /></a><button className="button-secondary" onClick={onShare}><Share2 size={14} /> Share this door</button></div></div><div className="detail-meta"><div><span>Type</span><strong>{game.category}</strong></div><div><span>Signal</span><strong className="text-aqua">Online / open</strong></div><div><span>Best with</span><strong>Headphones optional</strong></div></div></div></section>;
+function GameHero({ game, onShare, stat, onToggleStar, pending }: { game: Game; onShare: () => void; stat?: GameSocialStats; onToggleStar: () => void; pending: boolean }) {
+  return <section className={`detail-hero ${game.accent}`}><div className="container-g6 detail-layout"><div><span className="eyebrow">{game.number} / {game.signal}</span><h1>{game.title.split(' ')[0]}<br /><em>{game.title.split(' ').slice(1).join(' ')}</em></h1><p className="detail-summary">{game.long}</p><div className="hero-ctas"><a href="#launch" className="button-primary">Launch game <ExternalLink size={14} /></a><button className="button-secondary" onClick={onShare}><Share2 size={14} /> Share this door</button><StarButton stat={stat} onToggle={onToggleStar} pending={pending} /></div><p className="social-caption">One star per browser. Feedback stays private.</p></div><div className="detail-meta"><div><span>Type</span><strong>{game.category}</strong></div><div><span>Signal</span><strong className="text-aqua">Online / open</strong></div><div><span>Best with</span><strong>Headphones optional</strong></div></div></div></section>;
 }
 
 function GameAdLayout({ game, stageRef, isFocused, toggleFocus, install, showGuide, setShowGuide, installPlatform, setInstallPlatform }: {
@@ -252,6 +296,7 @@ function GameDetail() {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [installPlatform, setInstallPlatform] = useState<InstallPlatform>(() => detectInstallPlatform());
   const [showGuide, setShowGuide] = useState(false);
+  const social = useGameSocial();
 
   useEffect(() => {
     const onFullscreenChange = () => setIsFocused(document.fullscreenElement === stageRef.current);
@@ -308,10 +353,32 @@ function GameDetail() {
     if (navigator.share) await navigator.share(data).catch(() => undefined);
     else await navigator.clipboard?.writeText(window.location.href);
   };
-  return <Shell><main><GameHero game={game} onShare={share} /><GameAdLayout game={game} stageRef={stageRef} isFocused={isFocused} toggleFocus={toggleFocus} install={install} showGuide={showGuide} setShowGuide={setShowGuide} installPlatform={installPlatform} setInstallPlatform={setInstallPlatform} /></main></Shell>;
+  return <Shell><main><GameHero game={game} onShare={share} stat={social.getStat(game.slug)} onToggleStar={() => social.toggleStar(game.slug, !social.getStat(game.slug)?.starred)} pending={social.starMutation.isPending} /><GameAdLayout game={game} stageRef={stageRef} isFocused={isFocused} toggleFocus={toggleFocus} install={install} showGuide={showGuide} setShowGuide={setShowGuide} installPlatform={installPlatform} setInstallPlatform={setInstallPlatform} /><FeedbackPanel game={game} /></main></Shell>;
   /*
   return <Shell><main><section className={`detail-hero ${game.accent}`}><div className="container-g6 detail-layout"><div><span className="eyebrow">{game.number} / {game.signal}</span><h1>{game.title.split(' ')[0]}<br /><em>{game.title.split(' ').slice(1).join(' ')}</em></h1><p className="detail-summary">{game.long}</p><div className="hero-ctas"><a href="#launch" className="button-primary">Launch game <ExternalLink size={14} /></a><button className="button-secondary" onClick={share}><Share2 size={14} /> Share this door</button></div></div><div className="detail-meta"><div><span>Type</span><strong>{game.category}</strong></div><div><span>Signal</span><strong className="text-aqua">Online / open</strong></div><div><span>Best with</span><strong>Headphones optional</strong></div></div></div></section><section className="container-g6" id="launch"><div className="ad-slot">Ad placement / top rail / 970 × 90</div><div className="play-tools" aria-label="Game controls"><button className="button-secondary" onClick={toggleFocus}>{isFocused ? 'Exit focus mode' : 'Focus play'} <ExternalLink size={14} /></button><button className="button-secondary" onClick={install}>Add to Home Screen <Plus size={14} /></button><button className="text-button" onClick={() => setShowGuide((current) => !current)} aria-expanded={showGuide}>{showGuide ? 'Hide play notes' : 'Play notes'} <ChevronDown size={13} /></button></div>{showGuide && <div className="play-guide"><div><span className="eyebrow">Quick tutorial</span><h2>Keep the door open.</h2><p>Focus play expands the game without reloading it. When you are done, use the exit control or your browser’s back-to-window gesture.</p></div><div className="install-help"><div className="install-tabs" role="tablist" aria-label="Home screen instructions"><button className={installPlatform === 'apple' ? 'active' : ''} onClick={() => setInstallPlatform('apple')} role="tab" aria-selected={installPlatform === 'apple'}>iPhone / iPad</button><button className={installPlatform === 'android' ? 'active' : ''} onClick={() => setInstallPlatform('android')} role="tab" aria-selected={installPlatform === 'android'}>Android</button></div>{installPlatform === 'apple' ? <p><strong>1.</strong> Tap Share in Safari. <strong>2.</strong> Choose <em>Add to Home Screen</em>. <strong>3.</strong> Tap Add, then open GSix from the new icon.</p> : <p><strong>1.</strong> Open your browser menu. <strong>2.</strong> Choose <em>Install app</em> or <em>Add to Home screen</em>. <strong>3.</strong> Confirm, then return here from the GSix icon.</p>}</div></div>}<div ref={stageRef} className={`launch-stage ${isFocused ? 'focused' : ''}`}><div className="launch-header"><span><i className="live-dot" /> {game.title} / live transmission</span><div className="launch-actions"><button className="stage-control" onClick={toggleFocus}>{isFocused ? 'Exit focus' : 'Focus play'} <ExternalLink size={12} /></button><a href={game.url} target="_blank" rel="noreferrer" className="text-aqua">Open in new tab <ExternalLink size={12} style={{ verticalAlign: 'middle' }} /></a></div></div><iframe className="game-frame" src={game.url} title={`${game.title} playable game`} allow="fullscreen; autoplay; gamepad" /></div><div className="detail-lower"><div className="info-panel"><h3>Before you enter</h3><p>Give it a minute. These are short-form worlds built around atmosphere, surprise, and a little patience.</p></div><div className="info-panel"><h3>Keep the signal alive</h3><p>Found something worth sharing? Send this door to somebody who likes finding the good stuff first.</p></div></div></section></main></Shell>;
 */
+}
+
+function FeedbackPanel({ game }: { game: Game }) {
+  const auth = useAuth();
+  const [content, setContent] = useState('');
+  const [sent, setSent] = useState(false);
+  const feedback = useSubmitGameFeedback();
+  const errorMessage = feedback.error instanceof Error ? feedback.error.message : 'The note could not be sent. Try again.';
+
+  if (auth.isLoading) {
+    return <section className="container-g6 feedback-section"><div className="feedback-panel"><span className="eyebrow">Private channel</span><p className="social-status">Checking access to the feedback channel…</p></div></section>;
+  }
+
+  if (!auth.isAuthenticated) {
+    return <section className="container-g6 feedback-section"><div className="feedback-panel"><div><span className="eyebrow">Private channel</span><h2>Leave a note for GSix.</h2><p>Tell us what landed, what broke, or what you want to see next. Notes are attached to your account and only visible to the GSix team.</p></div><button className="button-secondary" onClick={auth.login}>Sign in to send feedback <ArrowUpRight size={14} /></button></div></section>;
+  }
+
+  if (sent) {
+    return <section className="container-g6 feedback-section"><div className="feedback-panel success"><div><span className="eyebrow">Transmission received</span><h2>Your note is in the queue.</h2><p>Thanks for helping us tune the signal. This feedback is private to the GSix team.</p></div><button className="text-button" onClick={() => { setSent(false); setContent(''); }}>Send another note</button></div></section>;
+  }
+
+  return <section className="container-g6 feedback-section"><div className="feedback-panel"><div><span className="eyebrow">Private channel / signed in</span><h2>Leave a note for GSix.</h2><p>Share a reaction to {game.title}. Your note will go to the owner review queue, not a public comment feed.</p></div><form className="feedback-form" onSubmit={(event) => { event.preventDefault(); feedback.mutate({ slug: game.slug, data: { content: content.trim() } }, { onSuccess: () => setSent(true) }); }}><textarea value={content} onChange={(event) => setContent(event.target.value)} minLength={4} maxLength={2000} required placeholder="What did you notice?" aria-label="Private feedback" /><div className="feedback-submit"><span>{content.length} / 2000</span><button className="button-primary" disabled={feedback.isPending}>{feedback.isPending ? 'Sending…' : 'Send private note'} <ArrowUpRight size={14} /></button></div>{feedback.isError && <p className="social-status error" role="alert">{errorMessage}</p>}</form></div></section>;
 }
 
 function Hire() {
