@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "G6 Games Hub"
+description = "A cinematic G6 network website that showcases playable games, provides ad-ready game pages, offers a website hire flow, and includes a protected soundtrack management area for future content."
+version = "1.0.0"
+id = "artifacts/g6-games-hub"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19106
+
+[services.development]
+run = "pnpm --filter @workspace/g6-games-hub run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/g6-games-hub", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/g6-games-hub/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19106"
+BASE_PATH = "/"
