@@ -151,7 +151,7 @@ button { cursor: pointer; }
 .feature-side .meta-row strong { color: hsl(var(--foreground)); font-weight: 400; }
 .feature-side .button-primary { width: 100%; margin-top: 30px; }
 .manifesto { background: hsl(var(--primary)); color: #09100f; padding: 115px max(20px, calc((100% - 1100px)/2)); position: relative; overflow: hidden; }
-.manifesto::after { content: 'G6'; position: absolute; right: -20px; top: -65px; font: 800 370px 'Syne'; color: rgba(0, 22, 20, .08); letter-spacing: -.2em; }
+.manifesto::after { content: 'GSIX'; position: absolute; right: -20px; top: -65px; font: 800 370px 'Syne'; color: rgba(0, 22, 20, .08); letter-spacing: -.2em; }
 .manifesto h2 { position: relative; z-index: 1; max-width: 850px; margin: 0; font: 800 clamp(43px, 7vw, 92px)/.9 'Syne'; letter-spacing: -.1em; }
 .manifesto p { position: relative; z-index: 1; max-width: 380px; margin: 34px 0 0; line-height: 1.6; font-size: 14px; }
 .network-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 14px; }
