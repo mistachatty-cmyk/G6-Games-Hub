@@ -1,6 +1,10 @@
 import {
+  GetGameFeedbackResponse,
   GetGameSocialStatsQueryParams,
   GetGameSocialStatsResponse,
+  ReviewGameFeedbackBody,
+  ReviewGameFeedbackParams,
+  ReviewGameFeedbackResponse,
   SubmitGameFeedbackBody,
   SubmitGameFeedbackParams,
   SubmitGameFeedbackResponse,
@@ -8,14 +12,15 @@ import {
   ToggleGameStarParams,
   ToggleGameStarResponse,
 } from "@workspace/api-zod";
-import { db, feedbackTable, gameStarsTable } from "@workspace/db";
-import { and, count, eq, inArray } from "drizzle-orm";
-import { Router, type IRouter } from "express";
+import { db, feedbackTable, gameStarsTable, usersTable } from "@workspace/db";
+import { and, asc, count, desc, eq, inArray } from "drizzle-orm";
+import { Router, type IRouter, type Request, type Response } from "express";
 import {
   hashVoterId,
   isSafeGameSlug,
   REGISTERED_GAME_SLUGS,
 } from "../lib/social";
+import { isGsixOwner } from "../lib/ownership";
 
 const router: IRouter = Router();
 
@@ -112,6 +117,98 @@ router.post("/games/:slug/feedback", async (req, res): Promise<void> => {
       received: true,
       message: "Your note is in the private review queue.",
     }),
+  );
+});
+
+function ownerOnly(req: Request, res: Response): boolean {
+  if (!req.isAuthenticated()) {
+    res.status(401).json({ error: "Sign in to access private feedback." });
+    return false;
+  }
+  if (!isGsixOwner(req.user)) {
+    res.status(403).json({ error: "GSix owner access is required." });
+    return false;
+  }
+  return true;
+}
+
+function toFeedbackNote(row: {
+  feedback: typeof feedbackTable.$inferSelect;
+  user: typeof usersTable.$inferSelect;
+}) {
+  return {
+    id: row.feedback.id,
+    gameSlug: row.feedback.gameSlug,
+    content: row.feedback.content,
+    status: row.feedback.status,
+    createdAt: row.feedback.createdAt,
+    updatedAt: row.feedback.updatedAt,
+    author: {
+      id: row.user.id,
+      email: row.user.email,
+      firstName: row.user.firstName,
+      lastName: row.user.lastName,
+    },
+  };
+}
+
+router.get("/games/feedback", async (req, res): Promise<void> => {
+  if (!ownerOnly(req, res)) return;
+
+  const rows = await db
+    .select({ feedback: feedbackTable, user: usersTable })
+    .from(feedbackTable)
+    .innerJoin(usersTable, eq(feedbackTable.userId, usersTable.id))
+    .orderBy(asc(feedbackTable.gameSlug), desc(feedbackTable.createdAt));
+
+  const groups = new Map<string, ReturnType<typeof toFeedbackNote>[]>();
+  for (const row of rows) {
+    const notes = groups.get(row.feedback.gameSlug) ?? [];
+    notes.push(toFeedbackNote(row));
+    groups.set(row.feedback.gameSlug, notes);
+  }
+
+  res.json(
+    GetGameFeedbackResponse.parse(
+      [...groups].map(([gameSlug, notes]) => ({ gameSlug, notes })),
+    ),
+  );
+});
+
+router.patch("/games/feedback/:id", async (req, res): Promise<void> => {
+  if (!ownerOnly(req, res)) return;
+
+  const params = ReviewGameFeedbackParams.safeParse(req.params);
+  const body = ReviewGameFeedbackBody.safeParse(req.body);
+  if (!params.success || !body.success) {
+    res.status(400).json({ error: "Feedback review must set status to reviewed." });
+    return;
+  }
+
+  const [updated] = await db
+    .update(feedbackTable)
+    .set({ status: body.data.status, updatedAt: new Date() })
+    .where(eq(feedbackTable.id, params.data.id))
+    .returning();
+
+  if (!updated) {
+    res.status(404).json({ error: "Feedback not found." });
+    return;
+  }
+
+  const [author] = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.id, updated.userId));
+  if (!author) {
+    res.status(404).json({ error: "Feedback author not found." });
+    return;
+  }
+
+  res.json(
+    ReviewGameFeedbackResponse.parse(
+      toFeedbackNote({ feedback: updated, user: author }),
+    ),
   );
 });
 

@@ -5,9 +5,9 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { AuthUser } from './authUser';
+import type { FeedbackNote } from './feedbackNote';
 
-export interface CurrentAuthUser {
-  user: AuthUser | null;
-  isOwner: boolean;
+export interface FeedbackGroup {
+  gameSlug: string;
+  notes: FeedbackNote[];
 }

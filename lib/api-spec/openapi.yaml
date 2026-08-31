@@ -155,6 +155,82 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /games/feedback:
+    get:
+      operationId: getGameFeedback
+      tags: [games]
+      summary: List private feedback for the game owner
+      responses:
+        "200":
+          description: Feedback grouped by game
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FeedbackGroup"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Owner access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /games/feedback/{id}:
+    patch:
+      operationId: reviewGameFeedback
+      tags: [games]
+      summary: Mark private feedback as reviewed
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+            minimum: 1
+            multipleOf: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeedbackReviewInput"
+      responses:
+        "200":
+          description: Updated private feedback
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedbackNote"
+        "400":
+          description: Invalid feedback review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Owner access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Feedback not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 components:
   schemas:
     HealthStatus:
@@ -185,7 +261,9 @@ components:
           anyOf:
             - $ref: "#/components/schemas/AuthUser"
             - type: "null"
-      required: [user]
+        isOwner:
+          type: boolean
+      required: [user, isOwner]
     GameSocialStats:
       type: object
       properties:
@@ -223,6 +301,57 @@ components:
         message:
           type: string
       required: [received, message]
+    FeedbackAuthor:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: ["string", "null"]
+        firstName:
+          type: ["string", "null"]
+        lastName:
+          type: ["string", "null"]
+      required: [id, email, firstName, lastName]
+    FeedbackNote:
+      type: object
+      properties:
+        id:
+          type: number
+          multipleOf: 1
+        gameSlug:
+          type: string
+        content:
+          type: string
+        status:
+          type: string
+          enum: [pending, reviewed]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        author:
+          $ref: "#/components/schemas/FeedbackAuthor"
+      required: [id, gameSlug, content, status, createdAt, updatedAt, author]
+    FeedbackGroup:
+      type: object
+      properties:
+        gameSlug:
+          type: string
+        notes:
+          type: array
+          items:
+            $ref: "#/components/schemas/FeedbackNote"
+      required: [gameSlug, notes]
+    FeedbackReviewInput:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [reviewed]
+      required: [status]
     Error:
       type: object
       properties:

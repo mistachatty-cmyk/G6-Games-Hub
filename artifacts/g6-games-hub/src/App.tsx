@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, ChevronDown, ChevronRight, ExternalLink, Menu, Plus, Share2, Trash2, X } from 'lucide-react';
 import { Link, Route, Switch, useLocation, useParams, Router as WouterRouter } from 'wouter';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { getGetGameSocialStatsQueryKey, useGetGameSocialStats, useSubmitGameFeedback, useToggleGameStar, type GameSocialStats } from '@workspace/api-client-react';
+import { getGetGameFeedbackQueryKey, getGetGameSocialStatsQueryKey, useGetGameFeedback, useGetGameSocialStats, useReviewGameFeedback, useSubmitGameFeedback, useToggleGameStar, type GameSocialStats } from '@workspace/api-client-react';
 import { useAuth } from '@workspace/replit-auth-web';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
@@ -396,17 +396,72 @@ function Hire() {
 type Track = { id: number; title: string; artist: string; url: string };
 const starterTracks: Track[] = [{ id: 1, title: 'After the lights', artist: 'GSix / field recording', url: 'https://cdn.pixabay.com/audio/2022/10/25/audio_9465c2c9c2.mp3' }, { id: 2, title: 'Local:200', artist: 'GSix / chapter zero', url: 'https://cdn.pixabay.com/audio/2022/03/15/audio_c8c8a734c7.mp3' }];
 
+function formatFeedbackDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }).format(date);
+}
+
+function feedbackAuthorName(author: { firstName: string | null; lastName: string | null; email: string | null }) {
+  const name = [author.firstName, author.lastName].filter(Boolean).join(' ');
+  return name || author.email || 'Unknown player';
+}
+
+function FeedbackInbox({ isOwner }: { isOwner: boolean }) {
+  const feedback = useGetGameFeedback({
+    query: {
+      enabled: isOwner,
+      queryKey: getGetGameFeedbackQueryKey(),
+    },
+  });
+  const review = useReviewGameFeedback({
+    mutation: {
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetGameFeedbackQueryKey() }),
+    },
+  });
+
+  if (feedback.isLoading) {
+    return <section className="admin-box feedback-inbox" data-testid="feedback-inbox-loading" aria-label="Loading private feedback"><div className="inbox-heading"><div><span className="eyebrow">Private player signals</span><h2>Feedback inbox</h2></div><span className="skeleton-line" /></div><div className="feedback-skeleton-list"><div className="feedback-skeleton" /><div className="feedback-skeleton" /><div className="feedback-skeleton" /></div></section>;
+  }
+
+  if (feedback.isError) {
+    return <section className="admin-box feedback-inbox" data-testid="feedback-inbox-error" role="alert"><div className="inbox-heading"><div><span className="eyebrow">Private player signals</span><h2>Feedback inbox</h2></div><span className="status-pill status-error">Connection error</span></div><div className="feedback-empty"><strong>The signal could not be read.</strong><p>GSix could not load the private review queue. Check the connection and try again.</p><button type="button" className="button-secondary" data-testid="button-retry-feedback" onClick={() => feedback.refetch()}>Retry connection</button></div></section>;
+  }
+
+  const groups = feedback.data ?? [];
+  const noteCount = groups.reduce((total, group) => total + group.notes.length, 0);
+  const pendingCount = groups.reduce((total, group) => total + group.notes.filter((note) => note.status === 'pending').length, 0);
+
+  return <section className="admin-box feedback-inbox" data-testid="feedback-inbox">
+    <div className="inbox-heading">
+      <div><span className="eyebrow">Private player signals</span><h2>Feedback inbox</h2><p className="locked-note">Notes from players, grouped by the door they came through. Nothing here is public.</p></div>
+      <div className="inbox-counts" aria-label="Feedback totals"><span data-testid="feedback-total-count"><strong>{noteCount}</strong> total</span><span className={pendingCount ? 'count-pending' : ''} data-testid="feedback-pending-count"><strong>{pendingCount}</strong> pending</span></div>
+    </div>
+    {groups.length === 0 ? <div className="feedback-empty" data-testid="feedback-empty-state"><span className="empty-mark" aria-hidden="true">—</span><strong>No private notes yet.</strong><p>When a player leaves a note, it will arrive here under its game signal.</p></div> : <div className="feedback-groups">{groups.map((group) => {
+      const game = getGameBySlug(group.gameSlug);
+      return <section className="feedback-group" key={group.gameSlug} data-testid={`feedback-group-${group.gameSlug}`}>
+        <div className="feedback-group-heading"><div><span className="feedback-game-index">{game?.number ?? '—'} / {game?.signal ?? 'signal'}</span><h3 data-testid={`feedback-game-${group.gameSlug}`}>{game?.title ?? group.gameSlug}</h3></div><span className="feedback-group-count">{group.notes.length} {group.notes.length === 1 ? 'note' : 'notes'}</span></div>
+        <div className="feedback-notes">{group.notes.map((note) => <article className={`feedback-note ${note.status}`} key={note.id} data-testid={`feedback-note-${note.id}`}>
+          <div className="feedback-note-meta"><span className="feedback-author" data-testid={`feedback-author-${note.id}`}>{feedbackAuthorName(note.author)}</span><span className="feedback-date" data-testid={`feedback-timestamp-${note.id}`}>{formatFeedbackDate(note.createdAt)}</span></div>
+          <p className="feedback-note-content" data-testid={`feedback-content-${note.id}`}>{note.content}</p>
+          <div className="feedback-note-footer"><span className={`status-pill status-${note.status}`} data-testid={`feedback-status-${note.id}`}>{note.status === 'pending' ? 'Needs review' : 'Reviewed'}</span>{note.status === 'pending' && <button type="button" className="review-button" data-testid={`button-review-feedback-${note.id}`} disabled={review.isPending} onClick={() => review.mutate({ id: note.id, data: { status: 'reviewed' } })}>{review.isPending ? 'Saving…' : 'Mark reviewed'} <ChevronRight size={13} /></button>}</div>
+        </article>)}</div>
+      </section>;
+    })}</div>}
+    {review.isError && <p className="social-status error feedback-mutation-error" role="alert" data-testid="feedback-review-error">That note could not be marked reviewed. Try again.</p>}
+  </section>;
+}
+
 function Admin() {
-  const [unlocked, setUnlocked] = useState(() => localStorage.getItem('g6-admin-unlocked') === 'yes');
-  const [pin, setPin] = useState('');
-  const [error, setError] = useState('');
+  const auth = useAuth();
   const [tracks, setTracks] = useState<Track[]>(() => { try { return JSON.parse(localStorage.getItem('g6-tracks') || 'null') || starterTracks; } catch { return starterTracks; } });
   const [newTrack, setNewTrack] = useState({ title: '', artist: '', url: '' });
   useEffect(() => { localStorage.setItem('g6-tracks', JSON.stringify(tracks)); }, [tracks]);
-  const unlock = (event: React.FormEvent) => { event.preventDefault(); if (pin === '14141414') { setUnlocked(true); localStorage.setItem('g6-admin-unlocked', 'yes'); } else setError('That code did not open the room.'); };
   const addTrack = (event: React.FormEvent) => { event.preventDefault(); if (!newTrack.title || !newTrack.url) return; setTracks([...tracks, { ...newTrack, id: Date.now() }]); setNewTrack({ title: '', artist: '', url: '' }); };
-  if (!unlocked) return <Shell><main className="admin-shell container-g6"><div className="admin-heading"><div><span className="eyebrow">GSix / Control room</span><h1>PRIVATE<br />SIGNAL.</h1></div><span className="text-dim font-mono" style={{ fontSize: 10 }}>ACCESS REQUIRED</span></div><form className="pin-card" onSubmit={unlock}><div className="brand-mark" style={{ margin: '0 auto' }} /><h2>Identify yourself.</h2><p className="locked-note">This room manages the soundtrack carried through the network.</p><input className="pin-input" type="password" inputMode="numeric" maxLength={8} placeholder="••••••••" aria-label="Control room PIN" value={pin} onChange={(e) => { setPin(e.target.value); setError(''); }} /><div className="pin-error">{error}</div><button className="button-primary" style={{ width: '100%' }} type="submit">Unlock room <ChevronRight size={15} /></button></form></main></Shell>;
-  return <Shell><main className="admin-shell container-g6"><div className="admin-heading"><div><span className="eyebrow">GSix / Control room / authenticated</span><h1>SOUNDTRACK<br /><span className="text-aqua">MANAGEMENT.</span></h1></div><button className="button-secondary" onClick={() => { setUnlocked(false); localStorage.removeItem('g6-admin-unlocked'); }}>Lock room</button></div><div className="admin-panel"><form className="admin-box" onSubmit={addTrack}><h2>Add a track.</h2><p className="locked-note">Tracks persist in this browser and can be used by the next transmission.</p><div className="field"><label htmlFor="track-title">Title</label><input id="track-title" required value={newTrack.title} onChange={(e) => setNewTrack({ ...newTrack, title: e.target.value })} placeholder="Track title" /></div><div className="field"><label htmlFor="track-artist">Artist / source</label><input id="track-artist" value={newTrack.artist} onChange={(e) => setNewTrack({ ...newTrack, artist: e.target.value })} placeholder="Who made the noise?" /></div><div className="field"><label htmlFor="track-url">Audio URL</label><input id="track-url" type="url" required value={newTrack.url} onChange={(e) => setNewTrack({ ...newTrack, url: e.target.value })} placeholder="https://..." /></div><button className="button-primary" type="submit"><Plus size={15} /> Add to rotation</button></form><section className="admin-box"><h2>Current rotation <span className="text-aqua" style={{ font: '11px var(--app-font-mono)' }}>/{tracks.length}</span></h2><div className="track-list">{tracks.map((track) => <div className="track-row" key={track.id}><div><strong>{track.title}</strong><small>{track.artist || 'Uncredited'} / {track.url}</small></div><button className="delete-btn" aria-label={`Remove ${track.title}`} onClick={() => setTracks(tracks.filter((item) => item.id !== track.id))}><Trash2 size={15} /> remove</button></div>)}</div></section></div></main></Shell>;
+  if (auth.isLoading) return <Shell><main className="admin-shell container-g6"><div className="admin-heading"><div><span className="eyebrow">GSix / Control room</span><h1>PRIVATE<br />SIGNAL.</h1></div><span className="status-pill status-loading" data-testid="admin-auth-loading">Checking identity</span></div><div className="admin-auth-skeleton" data-testid="admin-auth-skeleton"><span /><span /><span /></div></main></Shell>;
+  if (!auth.isAuthenticated) return <Shell><main className="admin-shell container-g6"><div className="admin-heading"><div><span className="eyebrow">GSix / Control room</span><h1>PRIVATE<br />SIGNAL.</h1></div><span className="status-pill status-locked">Sign-in required</span></div><div className="auth-state-card" data-testid="admin-sign-in-state"><div className="brand-mark" style={{ margin: '0 auto' }} /><span className="eyebrow">Owner channel</span><h2>Identify yourself.</h2><p className="locked-note">Sign in with your GSix account to open the private review room. Player notes and studio controls stay behind server-authenticated access.</p><button className="button-primary" data-testid="button-admin-sign-in" type="button" onClick={auth.login}>Sign in to control room <ChevronRight size={15} /></button></div></main></Shell>;
+  if (!auth.isOwner) return <Shell><main className="admin-shell container-g6"><div className="admin-heading"><div><span className="eyebrow">GSix / Control room</span><h1>PRIVATE<br />SIGNAL.</h1></div><span className="status-pill status-error">Access denied</span></div><div className="auth-state-card denied" data-testid="admin-access-denied-state"><div className="brand-mark" style={{ margin: '0 auto' }} /><span className="eyebrow">Restricted channel</span><h2>This door is not yours.</h2><p className="locked-note">Your account is signed in, but the control room is reserved for the GSix owner. No private feedback was loaded.</p><Link className="button-secondary" data-testid="link-return-from-admin-denied" href="/games">Return to the arcade <ArrowUpRight size={14} /></Link></div></main></Shell>;
+  return <Shell><main className="admin-shell container-g6"><div className="admin-heading"><div><span className="eyebrow">GSix / Control room / owner access</span><h1>PRIVATE<br /><span className="text-aqua">SIGNALS.</span></h1><p className="admin-heading-copy">A quiet room for the notes players leave behind.</p></div><button className="button-secondary" data-testid="button-admin-sign-out" type="button" onClick={auth.logout}>Sign out</button></div><FeedbackInbox isOwner={auth.isOwner} /><div className="admin-panel"><form className="admin-box" onSubmit={addTrack}><h2>Add a track.</h2><p className="locked-note">Tracks persist in this browser and can be used by the next transmission.</p><div className="field"><label htmlFor="track-title">Title</label><input id="track-title" data-testid="input-track-title" required value={newTrack.title} onChange={(e) => setNewTrack({ ...newTrack, title: e.target.value })} placeholder="Track title" /></div><div className="field"><label htmlFor="track-artist">Artist / source</label><input id="track-artist" data-testid="input-track-artist" value={newTrack.artist} onChange={(e) => setNewTrack({ ...newTrack, artist: e.target.value })} placeholder="Who made the noise?" /></div><div className="field"><label htmlFor="track-url">Audio URL</label><input id="track-url" data-testid="input-track-url" type="url" required value={newTrack.url} onChange={(e) => setNewTrack({ ...newTrack, url: e.target.value })} placeholder="https://..." /></div><button className="button-primary" data-testid="button-add-track" type="submit"><Plus size={15} /> Add to rotation</button></form><section className="admin-box"><h2>Current rotation <span className="text-aqua" style={{ font: '11px var(--app-font-mono)' }}>/{tracks.length}</span></h2><div className="track-list">{tracks.map((track) => <div className="track-row" key={track.id} data-testid={`track-row-${track.id}`}><div><strong data-testid={`track-title-${track.id}`}>{track.title}</strong><small>{track.artist || 'Uncredited'} / {track.url}</small></div><button className="delete-btn" data-testid={`button-remove-track-${track.id}`} aria-label={`Remove ${track.title}`} onClick={() => setTracks(tracks.filter((item) => item.id !== track.id))}><Trash2 size={15} /> remove</button></div>)}</div></section></div></main></Shell>;
 }
 
 function Router() {

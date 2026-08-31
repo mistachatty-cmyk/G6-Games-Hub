@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import type { AuthUser } from "@workspace/api-client-react";
+import type { AuthUser, CurrentAuthUser } from "@workspace/api-client-react";
 
 export type { AuthUser };
 
 interface AuthState {
   user: AuthUser | null;
+  isOwner: boolean;
   isLoading: boolean;
   isAuthenticated: boolean;
   login: () => void;
@@ -17,6 +18,7 @@ function getBasePath() {
 
 export function useAuth(): AuthState {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [isOwner, setIsOwner] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -24,17 +26,19 @@ export function useAuth(): AuthState {
     fetch("/api/auth/user", { credentials: "include" })
       .then((response) => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return response.json() as Promise<{ user: AuthUser | null }>;
+        return response.json() as Promise<CurrentAuthUser>;
       })
       .then((data) => {
         if (!cancelled) {
           setUser(data.user ?? null);
+          setIsOwner(data.isOwner === true);
           setIsLoading(false);
         }
       })
       .catch(() => {
         if (!cancelled) {
           setUser(null);
+          setIsOwner(false);
           setIsLoading(false);
         }
       });
@@ -51,5 +55,5 @@ export function useAuth(): AuthState {
     window.location.href = `/api/logout?returnTo=${encodeURIComponent(getBasePath())}`;
   }, []);
 
-  return { user, isLoading, isAuthenticated: Boolean(user), login, logout };
+  return { user, isOwner, isLoading, isAuthenticated: Boolean(user), login, logout };
 }

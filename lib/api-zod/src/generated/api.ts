@@ -15,8 +15,6 @@ import * as zod from 'zod';
 export const HealthCheckResponse = zod.object({
   "status": zod.string()
 })
-
-
 /**
  * @summary Get the current signed-in user
  */
@@ -27,10 +25,9 @@ export const GetCurrentAuthUserResponse = zod.object({
   "firstName": zod.string().nullable(),
   "lastName": zod.string().nullable(),
   "profileImageUrl": zod.string().nullable()
-}),zod.null()])
+}),zod.null()]),
+  "isOwner": zod.boolean()
 })
-
-
 /**
  * @summary Start sign-in
  */
@@ -129,3 +126,64 @@ export const SubmitGameFeedbackResponse = zod.object({
   "message": zod.string()
 })
 
+
+/**
+ * @summary List private feedback for the game owner
+ */
+export const getGameFeedbackResponseNotesItemIdMultipleOf = 1;
+
+
+
+export const GetGameFeedbackResponseItem = zod.object({
+  "gameSlug": zod.string(),
+  "notes": zod.array(zod.object({
+  "id": zod.number().multipleOf(getGameFeedbackResponseNotesItemIdMultipleOf),
+  "gameSlug": zod.string(),
+  "content": zod.string(),
+  "status": zod.enum(['pending', 'reviewed']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "author": zod.object({
+  "id": zod.string(),
+  "email": zod.string().nullable(),
+  "firstName": zod.string().nullable(),
+  "lastName": zod.string().nullable()
+})
+}))
+})
+export const GetGameFeedbackResponse = zod.array(GetGameFeedbackResponseItem)
+
+
+/**
+ * @summary Mark private feedback as reviewed
+ */
+export const reviewGameFeedbackPathIdMultipleOf = 1;
+
+
+
+export const ReviewGameFeedbackParams = zod.object({
+  "id": zod.coerce.number().min(1).multipleOf(reviewGameFeedbackPathIdMultipleOf)
+})
+
+export const ReviewGameFeedbackBody = zod.object({
+  "status": zod.enum(['reviewed'])
+})
+
+export const reviewGameFeedbackResponseIdMultipleOf = 1;
+
+
+
+export const ReviewGameFeedbackResponse = zod.object({
+  "id": zod.number().multipleOf(reviewGameFeedbackResponseIdMultipleOf),
+  "gameSlug": zod.string(),
+  "content": zod.string(),
+  "status": zod.enum(['pending', 'reviewed']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "author": zod.object({
+  "id": zod.string(),
+  "email": zod.string().nullable(),
+  "firstName": zod.string().nullable(),
+  "lastName": zod.string().nullable()
+})
+})

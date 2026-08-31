@@ -23,6 +23,7 @@ export interface AuthUser {
 
 export interface CurrentAuthUser {
   user: AuthUser | null;
+  isOwner: boolean;
 }
 
 export interface GameSocialStats {
@@ -52,6 +53,50 @@ export interface GameFeedbackInput {
 export interface FeedbackReceipt {
   received: boolean;
   message: string;
+}
+
+export interface FeedbackAuthor {
+  id: string;
+  /** @nullable */
+  email: string | null;
+  /** @nullable */
+  firstName: string | null;
+  /** @nullable */
+  lastName: string | null;
+}
+
+export type FeedbackNoteStatus = typeof FeedbackNoteStatus[keyof typeof FeedbackNoteStatus];
+
+
+export const FeedbackNoteStatus = {
+  pending: 'pending',
+  reviewed: 'reviewed',
+} as const;
+
+export interface FeedbackNote {
+  id: number;
+  gameSlug: string;
+  content: string;
+  status: FeedbackNoteStatus;
+  createdAt: string;
+  updatedAt: string;
+  author: FeedbackAuthor;
+}
+
+export interface FeedbackGroup {
+  gameSlug: string;
+  notes: FeedbackNote[];
+}
+
+export type FeedbackReviewInputStatus = typeof FeedbackReviewInputStatus[keyof typeof FeedbackReviewInputStatus];
+
+
+export const FeedbackReviewInputStatus = {
+  reviewed: 'reviewed',
+} as const;
+
+export interface FeedbackReviewInput {
+  status: FeedbackReviewInputStatus;
 }
 
 export interface Error {

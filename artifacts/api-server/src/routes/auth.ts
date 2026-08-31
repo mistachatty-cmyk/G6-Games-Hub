@@ -11,6 +11,7 @@ import {
   SESSION_TTL,
   type SessionData,
 } from "../lib/auth";
+import { isGsixOwner } from "../lib/ownership";
 
 const router: IRouter = Router();
 const OIDC_COOKIE_TTL = 10 * 60 * 1000;
@@ -75,9 +76,11 @@ async function upsertUser(claims: Record<string, unknown>) {
 }
 
 router.get("/auth/user", (req: Request, res: Response): void => {
+  const user = req.isAuthenticated() ? req.user : null;
   res.json(
     GetCurrentAuthUserResponse.parse({
-      user: req.isAuthenticated() ? req.user : null,
+      user,
+      isOwner: isGsixOwner(user),
     }),
   );
 });

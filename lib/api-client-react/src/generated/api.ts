@@ -22,7 +22,10 @@ import type {
 import type {
   CurrentAuthUser,
   Error,
+  FeedbackGroup,
+  FeedbackNote,
   FeedbackReceipt,
+  FeedbackReviewInput,
   GameFeedbackInput,
   GameSocialStats,
   GameStarInput,
@@ -669,4 +672,153 @@ export const useSubmitGameFeedback = <TError = ErrorType<Error>,
         TContext
       > => {
       return useMutation(getSubmitGameFeedbackMutationOptions(options));
+    }
+
+export const getGetGameFeedbackUrl = () => {
+
+
+
+
+  return `/api/games/feedback`
+}
+
+/**
+ * @summary List private feedback for the game owner
+ */
+export const getGameFeedback = async ( options?: Parameters<typeof customFetch>[1]): Promise<FeedbackGroup[]> => {
+
+  return customFetch<FeedbackGroup[]>(getGetGameFeedbackUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGameFeedbackQueryKey = () => {
+    return [
+    `/api/games/feedback`
+    ] as const;
+    }
+
+
+export const getGetGameFeedbackQueryOptions = <TData = Awaited<ReturnType<typeof getGameFeedback>>, TError = ErrorType<Error>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGameFeedback>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGameFeedbackQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGameFeedback>>> = ({ signal }) => getGameFeedback({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGameFeedback>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGameFeedbackQueryResult = NonNullable<Awaited<ReturnType<typeof getGameFeedback>>>
+export type GetGameFeedbackQueryError = ErrorType<Error>
+
+
+/**
+ * @summary List private feedback for the game owner
+ */
+
+export function useGetGameFeedback<TData = Awaited<ReturnType<typeof getGameFeedback>>, TError = ErrorType<Error>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGameFeedback>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGameFeedbackQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getReviewGameFeedbackUrl = (id: number,) => {
+
+
+
+
+  return `/api/games/feedback/${id}`
+}
+
+/**
+ * @summary Mark private feedback as reviewed
+ */
+export const reviewGameFeedback = async (id: number,
+    feedbackReviewInput: FeedbackReviewInput, options?: Parameters<typeof customFetch>[1]): Promise<FeedbackNote> => {
+
+  return customFetch<FeedbackNote>(getReviewGameFeedbackUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(feedbackReviewInput)
+  }
+);}
+
+
+
+
+
+export const getReviewGameFeedbackMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewGameFeedback>>, TError,{id: number;data: BodyType<FeedbackReviewInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reviewGameFeedback>>, TError,{id: number;data: BodyType<FeedbackReviewInput>}, TContext> => {
+
+const mutationKey = ['reviewGameFeedback'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reviewGameFeedback>>, {id: number;data: BodyType<FeedbackReviewInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  reviewGameFeedback(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReviewGameFeedbackMutationResult = NonNullable<Awaited<ReturnType<typeof reviewGameFeedback>>>
+    export type ReviewGameFeedbackMutationBody = BodyType<FeedbackReviewInput>
+    export type ReviewGameFeedbackMutationError = ErrorType<Error>
+
+    /**
+ * @summary Mark private feedback as reviewed
+ */
+export const useReviewGameFeedback = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewGameFeedback>>, TError,{id: number;data: BodyType<FeedbackReviewInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof reviewGameFeedback>>,
+        TError,
+        {id: number;data: BodyType<FeedbackReviewInput>},
+        TContext
+      > => {
+      return useMutation(getReviewGameFeedbackMutationOptions(options));
     }

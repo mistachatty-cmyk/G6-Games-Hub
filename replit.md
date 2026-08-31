@@ -10,6 +10,7 @@ _Replace the heading above with the project's name, and this line with one sente
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - Required env: `DATABASE_URL` — Postgres connection string
+- Required for the private feedback inbox: `GSIX_OWNER_EMAILS` (comma-separated signed-in owner emails) or `GSIX_OWNER_IDS`
 
 ## Stack
 

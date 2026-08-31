@@ -1,1 +1,2 @@
 - [Cross-origin game advertising](cross-origin-game-ads.md) — external game pages need their own source/deployment changes; the hub can only place ads around the iframe.
+- [OpenAPI integer compatibility](openapi-zod-integer-compatibility.md) — use numeric schemas with `multipleOf: 1` until the workspace Zod runtime supports generated integer helpers.
