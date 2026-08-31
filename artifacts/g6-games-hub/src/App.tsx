@@ -6,21 +6,9 @@ import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
+import { GAME_DETAIL_ROUTE, GAMES_DIRECTORY_PATH, gameDetailPath, games, getGameBySlug, getGameForPath, type Game } from '@/games';
 
 const queryClient = new QueryClient();
-
-type Game = {
-  slug: string;
-  title: string;
-  number: string;
-  category: string;
-  description: string;
-  long: string;
-  url: string;
-  signal: string;
-  accent: string;
-};
-
 type InstallPlatform = 'apple' | 'android';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -80,75 +68,6 @@ function AdSlot({ label, slot, className = '' }: { label: string; slot?: string;
   </div>;
 }
 
-const games: Game[] = [
-  {
-    slug: '616-survivor',
-    title: '616 Survivor',
-    number: '01',
-    category: 'Narrative / Atmosphere',
-    description: 'The block turned after dark. You have a basement bar, a crew worth saving, and one night at a time.',
-    long: 'A story about staying open when the lights go out. Make the call, keep the people close, and see what the neighborhood remembers.',
-    url: 'https://survivor-616.vercel.app/',
-    signal: 'NIGHT SHIFT',
-    accent: 'survivor',
-  },
-  {
-    slug: 'lokbook',
-    title: 'LokBook',
-    number: '02',
-    category: 'Ink / Interface',
-    description: 'An ink-and-interface experiment for keeping the strange things somewhere.',
-    long: 'A tactile notebook for collecting thoughts, signs, and small discoveries. Nothing here is quite as still as it looks.',
-    url: 'https://lok-book.vercel.app/',
-    signal: 'FIELD NOTES',
-    accent: 'lokbook',
-  },
-  {
-    slug: 'loklingu',
-    title: 'LokLingu',
-    number: '03',
-    category: 'Language / Arcade',
-    description: 'A playful language arcade. Collect words. Miss a few. Come back sharper.',
-    long: 'Words move fast here. Test your instincts, chase a cleaner streak, and leave with a new phrase stuck in your head.',
-    url: 'https://loklingu-eta.vercel.app/',
-    signal: 'WORD PLAY',
-    accent: 'loklingu',
-  },
-  {
-    slug: 'rune-diary',
-    title: 'Rune Diary',
-    number: '04',
-    category: 'Utility / Companion',
-    description: 'A dense, glowing companion for players who prefer their maps annotated.',
-    long: 'Track your runs, decode the useful bits, and build a private reference that knows where you have already been.',
-    url: 'https://rune-diary.vercel.app/',
-    signal: 'PLAYER TOOL',
-    accent: 'runes',
-  },
-  {
-    slug: 'kinetic-souls-classic',
-    title: 'Kinetic Souls Classic',
-    number: '05',
-    category: 'Action / Arcade',
-    description: 'A kinetic arena built around movement, timing, and the rush of finding your next opening.',
-    long: 'Keep moving, read the room, and let momentum do the talking. Kinetic Souls Classic is a compact action signal made for quick runs and repeat visits.',
-    url: 'https://kinetic-souls-classic.vercel.app/',
-    signal: 'MOTION STUDY',
-    accent: 'kinetic',
-  },
-  {
-    slug: 'kinetic-souls-2-alpha',
-    title: 'Kinetic Souls 2 Alpha',
-    number: '06',
-    category: 'Action / Soulslike',
-    description: 'A kinetic descent into sharp edges, strange rooms, and the next fight waiting around the corner.',
-    long: 'A playable alpha built for momentum. Read the room, trust your timing, and keep moving through a world that wants you to stop.',
-    url: 'https://ksouls2.vercel.app/',
-    signal: 'ALPHA DESCENT',
-    accent: 'kinetic',
-  },
-];
-
 function Brand() {
   return <Link href="/" className="brand-lockup"><span className="brand-mark" aria-hidden="true" /><span><span className="brand-text">GSix</span><span className="brand-sub"> / DISCOVER WHAT'S GRAND</span></span></Link>;
 }
@@ -191,10 +110,10 @@ function Footer() {
 function Shell({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   useEffect(() => {
-    const currentGame = games.find((game) => `/games/${game.slug}` === location);
+    const currentGame = getGameForPath(location);
     document.title = currentGame
       ? `${currentGame.title} — GSix Games`
-      : location === '/games'
+        : location === GAMES_DIRECTORY_PATH
         ? "GSix Games — Discover What's Grand"
         : location === '/hire'
           ? "Build with GSix — Discover What's Grand"
@@ -218,7 +137,7 @@ function Home() {
             <div className="hero-index reveal">Chapter 0 / Connect Local:200</div>
             <h1 className="reveal delay-1">DISCOVER<br /><span>WHAT'S</span><br />GRAND.</h1>
             <p className="hero-copy reveal delay-2">A growing network of games, websites, and useful little obsessions. Enter through the arcade. Leave with a new tab to send your friends.</p>
-            <div className="hero-ctas reveal delay-3"><Link href="/games" className="button-primary">Enter the arcade <ArrowUpRight size={15} /></Link><Link href="#network" className="button-secondary">Read the signal</Link></div>
+            <div className="hero-ctas reveal delay-3"><Link href={GAMES_DIRECTORY_PATH} className="button-primary">Enter the arcade <ArrowUpRight size={15} /></Link><Link href="#network" className="button-secondary">Read the signal</Link></div>
           </div>
           <div className="orbit reveal delay-2" aria-label="GSix Chapter 0">
             <div className="orbit-core"><div className="g6-sculpture">GSIX</div></div>
@@ -232,14 +151,14 @@ function Home() {
         <div className="section-head"><div><span className="eyebrow">The first signal</span><h2 className="section-title">Start with<br />a story.</h2></div><p className="section-intro">Not a feed. Not a shelf. A selection of places made to be entered, kept open, and passed around.</p></div>
         <div className="featured-game">
           <div className="feature-visual"><span className="feature-kicker">Featured transmission / 01</span><h3>616<br />SURVIVOR</h3><p>The block turned after dark. The lights are on somewhere. Enter the hideout.</p></div>
-          <div className="feature-side"><div><div className="meta-row"><span>Genre</span><strong>Atmospheric narrative</strong></div><div className="meta-row"><span>Session</span><strong>10 — 20 minutes</strong></div><div className="meta-row"><span>Status</span><strong className="text-aqua">Playable now</strong></div></div><Link href="/games/616-survivor" className="button-primary">Enter the hideout <ChevronRight size={15} /></Link></div>
+          <div className="feature-side"><div><div className="meta-row"><span>Genre</span><strong>Atmospheric narrative</strong></div><div className="meta-row"><span>Session</span><strong>10 — 20 minutes</strong></div><div className="meta-row"><span>Status</span><strong className="text-aqua">Playable now</strong></div></div><Link href={gameDetailPath('616-survivor')} className="button-primary">Enter the hideout <ChevronRight size={15} /></Link></div>
         </div>
       </section>
       <section className="manifesto"><h2>Small doors.<br />Big worlds.</h2><p>GSix is a place for experiments with enough polish to become rituals. We make the kind of internet you want to return to.</p></section>
       <section className="section container-g6">
         <div className="section-head"><div><span className="eyebrow">Network map</span><h2 className="section-title">Six ways<br />in.</h2></div><p className="section-intro">Every room has its own weather. Pick the one that sounds like your kind of night.</p></div>
         <div className="network-grid">
-          {games.map((game) => <Link href={`/games/${game.slug}`} className={`network-card ${game.accent}`} key={game.slug}><div><span className="card-no">{game.number} / {game.signal}</span><h3>{game.title}</h3><p>{game.description}</p></div><span className="card-arrow">↗</span></Link>)}
+          {games.map((game) => <Link href={gameDetailPath(game.slug)} className={`network-card ${game.accent}`} key={game.slug}><div><span className="card-no">{game.number} / {game.signal}</span><h3>{game.title}</h3><p>{game.description}</p></div><span className="card-arrow">↗</span></Link>)}
         </div>
       </section>
       <section className="container-g6 quote-line"><p>“The best things online still feel like you found them by accident.”</p><small>GSix / internal note 000</small></section>
@@ -257,7 +176,7 @@ function Games() {
 }
 
 function GameTile({ game }: { game: Game }) {
-  return <Link href={`/games/${game.slug}`} className={`game-tile ${game.accent}`}><div className="tile-top"><span>{game.number} / {game.signal}</span><span>{game.category.split(' / ')[0]}</span></div><div><h2>{game.title}</h2><p>{game.description}</p></div><div className="tile-bottom"><span className="tile-cta">Open transmission <ArrowUpRight size={14} style={{ verticalAlign: 'middle' }} /></span><span className="text-dim font-mono" style={{ fontSize: 11 }}>g6.games</span></div></Link>;
+  return <Link href={gameDetailPath(game.slug)} className={`game-tile ${game.accent}`}><div className="tile-top"><span>{game.number} / {game.signal}</span><span>{game.category.split(' / ')[0]}</span></div><div><h2>{game.title}</h2><p>{game.description}</p></div><div className="tile-bottom"><span className="tile-cta">Open transmission <ArrowUpRight size={14} style={{ verticalAlign: 'middle' }} /></span><span className="text-dim font-mono" style={{ fontSize: 11 }}>g6.games</span></div></Link>;
 }
 
 function GameHero({ game, onShare }: { game: Game; onShare: () => void }) {
@@ -327,7 +246,7 @@ function GameAdLayout({ game, stageRef, isFocused, toggleFocus, install, showGui
 
 function GameDetail() {
   const params = useParams<{ slug: string }>();
-  const game = games.find((item) => item.slug === params.slug);
+  const game = getGameBySlug(params.slug);
   const stageRef = useRef<HTMLDivElement>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -424,7 +343,7 @@ function Admin() {
 }
 
 function Router() {
-  return <ErrorBoundary><Switch><Route path="/" component={Home} /><Route path="/games" component={Games} /><Route path="/games/:slug" component={GameDetail} /><Route path="/hire" component={Hire} /><Route path="/admin" component={Admin} /><Route component={NotFound} /></Switch></ErrorBoundary>;
+  return <ErrorBoundary><Switch><Route path="/" component={Home} /><Route path={GAMES_DIRECTORY_PATH} component={Games} /><Route path={GAME_DETAIL_ROUTE} component={GameDetail} /><Route path="/hire" component={Hire} /><Route path="/admin" component={Admin} /><Route component={NotFound} /></Switch></ErrorBoundary>;
 }
 
 function App() {
