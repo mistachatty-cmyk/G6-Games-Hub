@@ -69,7 +69,7 @@ const games: Game[] = [
 ];
 
 function Brand() {
-  return <Link href="/" className="brand-lockup"><span className="brand-mark" aria-hidden="true" /><span><span className="brand-text">G6</span><span className="brand-sub"> / NETWORK</span></span></Link>;
+  return <Link href="/" className="brand-lockup"><span className="brand-mark" aria-hidden="true" /><span><span className="brand-text">GSix</span><span className="brand-sub"> / DISCOVER WHAT'S GRAND</span></span></Link>;
 }
 
 function Navigation() {
@@ -81,8 +81,8 @@ function Navigation() {
       <div className="nav-inner">
         <Brand />
         <nav className={`nav-links ${open ? 'open' : ''}`} aria-label="Primary navigation">
-          <Link href="/" className={`nav-link ${location === '/' ? 'active' : ''}`} onClick={() => setOpen(false)}>G6 home</Link>
-          <Link href="/games" className={`nav-link ${location.startsWith('/games') ? 'active' : ''}`} onClick={() => setOpen(false)}>G6 games</Link>
+          <Link href="/" className={`nav-link ${location === '/' ? 'active' : ''}`} onClick={() => setOpen(false)}>GSix home</Link>
+          <Link href="/games" className={`nav-link ${location.startsWith('/games') ? 'active' : ''}`} onClick={() => setOpen(false)}>GSix games</Link>
           <Link href="/hire" className={`nav-link ${location === '/hire' ? 'active' : ''}`} onClick={() => setOpen(false)}>Build with us</Link>
         </nav>
         <div className="nav-actions">
@@ -90,8 +90,8 @@ function Navigation() {
             <button className="switcher-button" aria-expanded={sites} onClick={() => setSites(!sites)}>Sites <ChevronDown size={13} /></button>
             {sites && <div className="switcher-menu">
               <p>Choose a signal</p>
-              <Link href="/" onClick={() => setSites(false)}>G6 Games Hub <span className="text-aqua">● live</span></Link>
-              <a href="#future" onClick={() => setSites(false)}>G6 / Chapter 01 <span className="text-dim">soon</span></a>
+              <Link href="/" onClick={() => setSites(false)}>GSix Games Hub <span className="text-aqua">● live</span></Link>
+              <a href="#future" onClick={() => setSites(false)}>GSix / Chapter 01 <span className="text-dim">soon</span></a>
               <a href="#future" onClick={() => setSites(false)}>Add a site <Plus size={13} style={{ verticalAlign: 'middle' }} /></a>
             </div>}
           </div>
@@ -104,7 +104,7 @@ function Navigation() {
 }
 
 function Footer() {
-  return <footer className="footer"><div className="container-g6 footer-inner"><span>G6 NETWORK / CHAPTER 0</span><span>DISCOVER WHAT'S GRAND <span className="text-aqua">·</span> LOCAL:200</span></div></footer>;
+  return <footer className="footer"><div className="container-g6 footer-inner"><span>GSIX NETWORK / CHAPTER 0</span><span>DISCOVER WHAT'S GRAND <span className="text-aqua">·</span> LOCAL:200</span></div></footer>;
 }
 
 function Shell({ children }: { children: React.ReactNode }) {
@@ -112,7 +112,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 }
 
 function SignalStrip() {
-  return <div className="signal-strip"><span>G6 Games Hub</span> four playable signals <span>◆</span> built for the curious <span>◆</span> share something grand <span>◆</span> chapter 0 / connect local:200</div>;
+  return <div className="signal-strip"><span>GSix Games Hub</span> four playable signals <span>◆</span> built for the curious <span>◆</span> share something grand <span>◆</span> chapter 0 / connect local:200</div>;
 }
 
 function Home() {
