@@ -28,10 +28,56 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
 }
 
+declare global {
+  interface Window {
+    adsbygoogle?: unknown[];
+  }
+}
+
 function detectInstallPlatform(): InstallPlatform {
   return /iPad|iPhone|iPod|Macintosh/i.test(navigator.userAgent) && ('ontouchend' in document || navigator.maxTouchPoints > 1)
     ? 'apple'
     : 'android';
+}
+
+const adsenseClient = import.meta.env.VITE_ADSENSE_CLIENT as string | undefined;
+const adsenseSlots = {
+  top: import.meta.env.VITE_ADSENSE_SLOT_TOP as string | undefined,
+  rail: import.meta.env.VITE_ADSENSE_SLOT_RAIL as string | undefined,
+  bottom: import.meta.env.VITE_ADSENSE_SLOT_BOTTOM as string | undefined,
+};
+
+function AdSlot({ label, slot, className = '' }: { label: string; slot?: string; className?: string }) {
+  const live = Boolean(adsenseClient && slot);
+
+  useEffect(() => {
+    if (!live) return;
+    const pushAd = () => {
+      try {
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      } catch {
+        // AdSense can reject a slot while it is still being reviewed.
+      }
+    };
+    let script = document.querySelector<HTMLScriptElement>('#adsense-script');
+    if (!script) {
+      script = document.createElement('script');
+      script.id = 'adsense-script';
+      script.async = true;
+      script.crossOrigin = 'anonymous';
+      script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClient}`;
+      script.addEventListener('load', pushAd, { once: true });
+      document.head.appendChild(script);
+    } else {
+      script.addEventListener('load', pushAd, { once: true });
+      if (window.adsbygoogle) pushAd();
+    }
+    return () => script?.removeEventListener('load', pushAd);
+  }, [live, slot]);
+
+  return <div className={`ad-slot ${live ? 'ad-slot-live' : 'ad-slot-placeholder'} ${className}`} aria-label={`Advertisement ${label}`}>
+    {live ? <ins className="adsbygoogle" style={{ display: 'block' }} data-ad-client={adsenseClient} data-ad-slot={slot} data-ad-format="auto" data-full-width-responsive="true" /> : <><span>AdSense / {label}</span><small>Connect publisher and slot IDs to serve ads</small></>}
+  </div>;
 }
 
 const games: Game[] = [
