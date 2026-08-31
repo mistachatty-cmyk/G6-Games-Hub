@@ -1,0 +1,18 @@
+{
+  "name": "GSix — Discover What's Grand",
+  "short_name": "GSix",
+  "description": "A growing network of games, websites, and useful little obsessions.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#090b0b",
+  "theme_color": "#090b0b",
+  "icons": [
+    {
+      "src": "./gsix-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

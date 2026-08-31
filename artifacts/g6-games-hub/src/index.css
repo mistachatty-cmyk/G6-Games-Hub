@@ -206,13 +206,31 @@ button { cursor: pointer; }
 .detail-meta strong { font-weight: 400; color: hsl(var(--foreground)); }
 .launch-stage { margin: 44px 0 110px; border: 1px solid hsl(var(--border)); background: #060808; }
 .launch-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 17px; border-bottom: 1px solid hsl(var(--border)); font: 10px var(--app-font-mono); color: hsl(var(--muted-foreground)); text-transform: uppercase; }
+.launch-actions { display: flex; align-items: center; gap: 18px; }
+.stage-control, .text-button { border: 0; background: transparent; color: hsl(var(--primary)); padding: 0; font: 10px var(--app-font-mono); text-transform: uppercase; letter-spacing: .08em; display: inline-flex; align-items: center; gap: 7px; }
+.stage-control:hover, .text-button:hover { color: hsl(var(--foreground)); }
+.play-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.play-tools .button-secondary { padding: 11px 13px; font-size: 10px; }
+.play-guide { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; border: 1px solid hsl(var(--primary)); padding: 26px 28px; margin-top: 13px; background: linear-gradient(115deg, rgba(96, 236, 216, .08), rgba(9, 11, 11, .8)); }
+.play-guide h2 { margin: 12px 0 9px; font: 700 clamp(25px, 3vw, 38px)/.95 'Syne'; letter-spacing: -.07em; }
+.play-guide p { margin: 0; color: hsl(var(--muted-foreground)); font-size: 12px; line-height: 1.65; }
+.install-help { border-left: 1px solid hsl(var(--border)); padding-left: 28px; display: flex; flex-direction: column; justify-content: center; }
+.install-tabs { display: flex; gap: 7px; margin-bottom: 17px; }
+.install-tabs button { border: 1px solid hsl(var(--border)); color: hsl(var(--muted-foreground)); background: transparent; padding: 8px 10px; font: 10px var(--app-font-mono); text-transform: uppercase; letter-spacing: .06em; }
+.install-tabs button.active, .install-tabs button:hover { border-color: hsl(var(--primary)); color: hsl(var(--primary)); }
+.install-help strong { color: hsl(var(--primary)); font: 10px var(--app-font-mono); }
+.install-help em { color: hsl(var(--foreground)); font-style: normal; }
 .live-dot { width: 7px; height: 7px; background: hsl(var(--primary)); display: inline-block; border-radius: 50%; margin-right: 7px; }
 .game-frame { width: 100%; height: min(70vw, 680px); min-height: 450px; border: 0; background: #030404; display: block; }
+.launch-stage.focused, .launch-stage:fullscreen { position: fixed; inset: 0; z-index: 70; margin: 0; border: 0; display: flex; flex-direction: column; border-radius: 0; }
+.launch-stage.focused .launch-header, .launch-stage:fullscreen .launch-header { flex: 0 0 auto; }
+.launch-stage.focused .game-frame, .launch-stage:fullscreen .game-frame { flex: 1 1 auto; height: auto; min-height: 0; }
 .ad-slot { min-height: 70px; border: 1px dashed hsl(var(--border)); margin: 14px 0; display: grid; place-items: center; color: hsl(var(--muted-foreground)); font: 9px var(--app-font-mono); letter-spacing: .16em; text-transform: uppercase; }
 .detail-lower { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .info-panel { border: 1px solid hsl(var(--border)); padding: 28px; min-height: 180px; }
 .info-panel h3 { margin: 0 0 14px; font: 700 23px 'Syne'; letter-spacing: -.06em; }
 .info-panel p { color: hsl(var(--muted-foreground)); line-height: 1.6; font-size: 13px; margin: 0; }
+body.is-game-focused { overflow: hidden; }
 
 .form-shell { padding: 80px 0 120px; }
 .form-grid { display: grid; grid-template-columns: .7fr 1.3fr; gap: 80px; }
@@ -280,6 +298,10 @@ button { cursor: pointer; }
   .search-input { margin-top: 15px; width: 100%; }
   .games-list, .detail-lower { grid-template-columns: 1fr; }
   .game-frame { min-height: 420px; height: 75vw; }
+  .launch-header { align-items: flex-start; gap: 12px; flex-direction: column; }
+  .launch-actions { width: 100%; justify-content: space-between; gap: 10px; }
+  .play-guide { grid-template-columns: 1fr; gap: 20px; padding: 22px; }
+  .install-help { border-left: 0; border-top: 1px solid hsl(var(--border)); padding: 20px 0 0; }
   .form-grid { gap: 15px; }
   .form-submit { align-items: flex-start; flex-direction: column-reverse; }
 }
