@@ -1,0 +1,1 @@
+- [Cross-origin game advertising](cross-origin-game-ads.md) — external game pages need their own source/deployment changes; the hub can only place ads around the iframe.

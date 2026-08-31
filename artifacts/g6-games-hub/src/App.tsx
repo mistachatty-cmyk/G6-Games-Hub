@@ -260,6 +260,71 @@ function GameTile({ game }: { game: Game }) {
   return <Link href={`/games/${game.slug}`} className={`game-tile ${game.accent}`}><div className="tile-top"><span>{game.number} / {game.signal}</span><span>{game.category.split(' / ')[0]}</span></div><div><h2>{game.title}</h2><p>{game.description}</p></div><div className="tile-bottom"><span className="tile-cta">Open transmission <ArrowUpRight size={14} style={{ verticalAlign: 'middle' }} /></span><span className="text-dim font-mono" style={{ fontSize: 11 }}>g6.games</span></div></Link>;
 }
 
+function GameHero({ game, onShare }: { game: Game; onShare: () => void }) {
+  return <section className={`detail-hero ${game.accent}`}><div className="container-g6 detail-layout"><div><span className="eyebrow">{game.number} / {game.signal}</span><h1>{game.title.split(' ')[0]}<br /><em>{game.title.split(' ').slice(1).join(' ')}</em></h1><p className="detail-summary">{game.long}</p><div className="hero-ctas"><a href="#launch" className="button-primary">Launch game <ExternalLink size={14} /></a><button className="button-secondary" onClick={onShare}><Share2 size={14} /> Share this door</button></div></div><div className="detail-meta"><div><span>Type</span><strong>{game.category}</strong></div><div><span>Signal</span><strong className="text-aqua">Online / open</strong></div><div><span>Best with</span><strong>Headphones optional</strong></div></div></div></section>;
+}
+
+function GameAdLayout({ game, stageRef, isFocused, toggleFocus, install, showGuide, setShowGuide, installPlatform, setInstallPlatform }: {
+  game: Game;
+  stageRef: React.RefObject<HTMLDivElement | null>;
+  isFocused: boolean;
+  toggleFocus: () => void;
+  install: () => void;
+  showGuide: boolean;
+  setShowGuide: React.Dispatch<React.SetStateAction<boolean>>;
+  installPlatform: InstallPlatform;
+  setInstallPlatform: React.Dispatch<React.SetStateAction<InstallPlatform>>;
+}) {
+  return (
+    <section className="container-g6" id="launch">
+      <AdSlot label="top rail" slot={adsenseSlots.top} className="top-ad-slot" />
+      <div className="game-play-layout">
+        <aside className="ad-rail" aria-label="Sidebar advertisement">
+          <AdSlot label="desktop rail" slot={adsenseSlots.rail} className="rail-ad" />
+        </aside>
+        <div className="game-play-column">
+          <div className="play-tools" aria-label="Game controls">
+            <button className="button-secondary" onClick={toggleFocus}>{isFocused ? 'Exit focus mode' : 'Focus play'} <ExternalLink size={14} /></button>
+            <button className="button-secondary" onClick={install}>Add to Home Screen <Plus size={14} /></button>
+            <button className="text-button" onClick={() => setShowGuide((current) => !current)} aria-expanded={showGuide}>{showGuide ? 'Hide play notes' : 'Play notes'} <ChevronDown size={13} /></button>
+          </div>
+          {showGuide && <div className="play-guide">
+            <div>
+              <span className="eyebrow">Quick tutorial</span>
+              <h2>Keep the door open.</h2>
+              <p>Focus play expands the game without reloading it. When you are done, use the exit control or your browser’s back-to-window gesture.</p>
+            </div>
+            <div className="install-help">
+              <div className="install-tabs" role="tablist" aria-label="Home screen instructions">
+                <button className={installPlatform === 'apple' ? 'active' : ''} onClick={() => setInstallPlatform('apple')} role="tab" aria-selected={installPlatform === 'apple'}>iPhone / iPad</button>
+                <button className={installPlatform === 'android' ? 'active' : ''} onClick={() => setInstallPlatform('android')} role="tab" aria-selected={installPlatform === 'android'}>Android</button>
+              </div>
+              {installPlatform === 'apple'
+                ? <p><strong>1.</strong> Tap Share in Safari. <strong>2.</strong> Choose <em>Add to Home Screen</em>. <strong>3.</strong> Tap Add, then open GSix from the new icon.</p>
+                : <p><strong>1.</strong> Open your browser menu. <strong>2.</strong> Choose <em>Install app</em> or <em>Add to Home screen</em>. <strong>3.</strong> Confirm, then return here from the GSix icon.</p>}
+            </div>
+          </div>}
+          <div ref={stageRef} className={`launch-stage ${isFocused ? 'focused' : ''}`}>
+            <div className="launch-header">
+              <span><i className="live-dot" /> {game.title} / live transmission</span>
+              <div className="launch-actions">
+                <button className="stage-control" onClick={toggleFocus}>{isFocused ? 'Exit focus' : 'Focus play'} <ExternalLink size={12} /></button>
+                <a href={game.url} target="_blank" rel="noreferrer" className="text-aqua">Open in new tab <ExternalLink size={12} style={{ verticalAlign: 'middle' }} /></a>
+              </div>
+            </div>
+            <iframe className="game-frame" src={game.url} title={`${game.title} playable game`} allow="fullscreen; autoplay; gamepad" />
+          </div>
+          <AdSlot label="below game" slot={adsenseSlots.bottom} className="bottom-ad-slot" />
+        </div>
+      </div>
+      <div className="detail-lower">
+        <div className="info-panel"><h3>Before you enter</h3><p>Give it a minute. These are short-form worlds built around atmosphere, surprise, and a little patience.</p></div>
+        <div className="info-panel"><h3>Keep the signal alive</h3><p>Found something worth sharing? Send this door to somebody who likes finding the good stuff first.</p></div>
+      </div>
+    </section>
+  );
+}
+
 function GameDetail() {
   const params = useParams<{ slug: string }>();
   const game = games.find((item) => item.slug === params.slug);
@@ -324,7 +389,10 @@ function GameDetail() {
     if (navigator.share) await navigator.share(data).catch(() => undefined);
     else await navigator.clipboard?.writeText(window.location.href);
   };
+  return <Shell><main><GameHero game={game} onShare={share} /><GameAdLayout game={game} stageRef={stageRef} isFocused={isFocused} toggleFocus={toggleFocus} install={install} showGuide={showGuide} setShowGuide={setShowGuide} installPlatform={installPlatform} setInstallPlatform={setInstallPlatform} /></main></Shell>;
+  /*
   return <Shell><main><section className={`detail-hero ${game.accent}`}><div className="container-g6 detail-layout"><div><span className="eyebrow">{game.number} / {game.signal}</span><h1>{game.title.split(' ')[0]}<br /><em>{game.title.split(' ').slice(1).join(' ')}</em></h1><p className="detail-summary">{game.long}</p><div className="hero-ctas"><a href="#launch" className="button-primary">Launch game <ExternalLink size={14} /></a><button className="button-secondary" onClick={share}><Share2 size={14} /> Share this door</button></div></div><div className="detail-meta"><div><span>Type</span><strong>{game.category}</strong></div><div><span>Signal</span><strong className="text-aqua">Online / open</strong></div><div><span>Best with</span><strong>Headphones optional</strong></div></div></div></section><section className="container-g6" id="launch"><div className="ad-slot">Ad placement / top rail / 970 × 90</div><div className="play-tools" aria-label="Game controls"><button className="button-secondary" onClick={toggleFocus}>{isFocused ? 'Exit focus mode' : 'Focus play'} <ExternalLink size={14} /></button><button className="button-secondary" onClick={install}>Add to Home Screen <Plus size={14} /></button><button className="text-button" onClick={() => setShowGuide((current) => !current)} aria-expanded={showGuide}>{showGuide ? 'Hide play notes' : 'Play notes'} <ChevronDown size={13} /></button></div>{showGuide && <div className="play-guide"><div><span className="eyebrow">Quick tutorial</span><h2>Keep the door open.</h2><p>Focus play expands the game without reloading it. When you are done, use the exit control or your browser’s back-to-window gesture.</p></div><div className="install-help"><div className="install-tabs" role="tablist" aria-label="Home screen instructions"><button className={installPlatform === 'apple' ? 'active' : ''} onClick={() => setInstallPlatform('apple')} role="tab" aria-selected={installPlatform === 'apple'}>iPhone / iPad</button><button className={installPlatform === 'android' ? 'active' : ''} onClick={() => setInstallPlatform('android')} role="tab" aria-selected={installPlatform === 'android'}>Android</button></div>{installPlatform === 'apple' ? <p><strong>1.</strong> Tap Share in Safari. <strong>2.</strong> Choose <em>Add to Home Screen</em>. <strong>3.</strong> Tap Add, then open GSix from the new icon.</p> : <p><strong>1.</strong> Open your browser menu. <strong>2.</strong> Choose <em>Install app</em> or <em>Add to Home screen</em>. <strong>3.</strong> Confirm, then return here from the GSix icon.</p>}</div></div>}<div ref={stageRef} className={`launch-stage ${isFocused ? 'focused' : ''}`}><div className="launch-header"><span><i className="live-dot" /> {game.title} / live transmission</span><div className="launch-actions"><button className="stage-control" onClick={toggleFocus}>{isFocused ? 'Exit focus' : 'Focus play'} <ExternalLink size={12} /></button><a href={game.url} target="_blank" rel="noreferrer" className="text-aqua">Open in new tab <ExternalLink size={12} style={{ verticalAlign: 'middle' }} /></a></div></div><iframe className="game-frame" src={game.url} title={`${game.title} playable game`} allow="fullscreen; autoplay; gamepad" /></div><div className="detail-lower"><div className="info-panel"><h3>Before you enter</h3><p>Give it a minute. These are short-form worlds built around atmosphere, surprise, and a little patience.</p></div><div className="info-panel"><h3>Keep the signal alive</h3><p>Found something worth sharing? Send this door to somebody who likes finding the good stuff first.</p></div></div></section></main></Shell>;
+*/
 }
 
 function Hire() {
