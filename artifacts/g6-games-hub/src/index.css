@@ -376,7 +376,7 @@ body.is-game-focused { overflow: hidden; }
   .form-grid { gap: 45px; }
 }
 
-@media (max-width: 800px) {
+@media (max-width: 900px) {
   .container-g6, .nav-inner { width: min(100% - 28px, 1180px); }
   .site-nav { height: 68px; }
   .nav-links { display: none; position: absolute; top: 68px; left: 0; right: 0; padding: 18px 14px; background: #0b1010; border-bottom: 1px solid hsl(var(--border)); flex-direction: column; align-items: flex-start; }
@@ -452,7 +452,7 @@ body.is-game-focused { overflow: hidden; }
   .tile-bottom { align-items: flex-start; flex-direction: column; gap: 18px; }
   .tile-actions { width: 100%; justify-content: space-between; }
   .page-top { padding: 64px 0 40px; }
-  .page-top h1 { font-size: clamp(46px, 15vw, 76px); }
+  .page-top h1 { font-size: clamp(42px, 12.8vw, 76px); }
   .detail-hero { padding: 58px 0 42px; }
   .detail-hero h1 { font-size: clamp(50px, 16vw, 82px); }
   .detail-summary { font-size: 14px; }
