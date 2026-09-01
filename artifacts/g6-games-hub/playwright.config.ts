@@ -14,6 +14,7 @@ export default defineConfig({
   use: {
     baseURL: 'http://127.0.0.1:19106/',
     trace: 'on-first-retry',
+    serviceWorkers: 'block',
     ...devices['Desktop Chrome'],
   },
   webServer: {

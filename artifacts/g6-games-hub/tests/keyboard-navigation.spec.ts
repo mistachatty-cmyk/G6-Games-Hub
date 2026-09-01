@@ -134,3 +134,140 @@ test.describe('visitor actions', () => {
     await expect(page.getByText('Sign-in required')).toBeVisible();
   });
 });
+
+test.describe('signed-in actions', () => {
+  test('keeps the private feedback form keyboard reachable through success', async ({ page }) => {
+    await page.unroute('**/api/auth/user');
+    await page.route('**/api/auth/user', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          user: {
+            id: 'keyboard-player',
+            email: 'keyboard.player@example.com',
+            firstName: 'Keyboard',
+            lastName: 'Player',
+            profileImageUrl: null,
+          },
+          isOwner: false,
+        }),
+      });
+    });
+
+    let feedbackBody: unknown;
+    await page.route('**/api/games/616-survivor/feedback', async (route) => {
+      feedbackBody = route.request().postDataJSON();
+      await route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          received: true,
+          message: 'Your note is in the private review queue.',
+        }),
+      });
+    });
+
+    await page.goto('/games/616-survivor');
+
+    await expect(page.getByText('Private channel / signed in')).toBeVisible();
+    const feedback = page.getByLabel('Private feedback');
+    const submitButton = page.getByRole('button', { name: 'Send private note' });
+    await expect(feedback).toBeVisible();
+    await expect(submitButton).toBeVisible();
+
+    await feedback.focus();
+    await expect(feedback).toBeFocused();
+    await feedback.fill('A thoughtful keyboard test note.');
+    await submitButton.focus();
+    await expect(submitButton).toBeFocused();
+    await page.keyboard.press('Enter');
+
+    await expect.poll(() => feedbackBody).toEqual({ content: 'A thoughtful keyboard test note.' });
+    await expect(page.getByRole('heading', { name: 'Your note is in the queue.' })).toBeVisible();
+    await expect(page.getByText('Transmission received')).toBeVisible();
+  });
+
+  test('keeps owner review and sign-out controls keyboard reachable', async ({ page }) => {
+    await page.unroute('**/api/auth/user');
+    await page.route('**/api/auth/user', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          user: {
+            id: 'gsix-owner',
+            email: 'owner@example.com',
+            firstName: 'GSix',
+            lastName: 'Owner',
+            profileImageUrl: null,
+          },
+          isOwner: true,
+        }),
+      });
+    });
+
+    let feedbackStatus: 'pending' | 'reviewed' = 'pending';
+    let reviewBody: unknown;
+    const feedbackNote = () => ({
+      id: 42,
+      gameSlug: '616-survivor',
+      content: 'The atmosphere landed immediately.',
+      status: feedbackStatus,
+      createdAt: '2026-09-01T12:00:00.000Z',
+      updatedAt: '2026-09-01T12:00:00.000Z',
+      author: {
+        id: 'keyboard-player',
+        email: 'keyboard.player@example.com',
+        firstName: 'Keyboard',
+        lastName: 'Player',
+      },
+    });
+
+    await page.route('**/api/games/feedback', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([{ gameSlug: '616-survivor', notes: [feedbackNote()] }]),
+      });
+    });
+    await page.route('**/api/games/feedback/42', async (route) => {
+      reviewBody = route.request().postDataJSON();
+      feedbackStatus = 'reviewed';
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(feedbackNote()),
+      });
+    });
+
+    let logoutRequested = false;
+    await page.route('**/api/logout**', async (route) => {
+      logoutRequested = true;
+      await route.fulfill({
+        status: 200,
+        contentType: 'text/html',
+        body: 'Signed out',
+      });
+    });
+
+    await page.goto('/admin');
+
+    const reviewButton = page.getByRole('button', { name: 'Mark reviewed' });
+    await expect(reviewButton).toBeVisible();
+    await reviewButton.focus();
+    await expect(reviewButton).toBeFocused();
+    await page.keyboard.press('Enter');
+
+    await expect.poll(() => reviewBody).toEqual({ status: 'reviewed' });
+    await expect(page.getByTestId('feedback-status-42')).toHaveText('Reviewed');
+    await expect(page.getByRole('button', { name: 'Mark reviewed' })).toHaveCount(0);
+
+    const signOutButton = page.getByRole('button', { name: 'Sign out' });
+    await expect(signOutButton).toBeVisible();
+    await signOutButton.focus();
+    await expect(signOutButton).toBeFocused();
+    await signOutButton.press('Enter');
+    await expect.poll(() => logoutRequested).toBe(true);
+  });
+});
