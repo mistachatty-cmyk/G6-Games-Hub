@@ -15,6 +15,7 @@ const expectedGames = [
   { slug: 'rune-diary', title: 'Rune Diary', signal: 'PLAYER TOOL', url: 'https://rune-diary.vercel.app/' },
   { slug: 'kinetic-souls-classic', title: 'Kinetic Souls Classic', signal: 'MOTION STUDY', url: 'https://kinetic-souls-classic.vercel.app/' },
   { slug: 'kinetic-souls-2-alpha', title: 'Kinetic Souls 2 Alpha', signal: 'ALPHA DESCENT', url: 'https://ksouls2.vercel.app/' },
+  { slug: 'spend-it-all', title: 'Spend It All', signal: 'WEALTH LAB', url: 'https://spend-ut-all.vercel.app/' },
 ] as const;
 
 test('the games directory and detail route are registered', () => {

@@ -80,6 +80,17 @@ export const games: Game[] = [
     signal: 'ALPHA DESCENT',
     accent: 'kinetic',
   },
+  {
+    slug: 'spend-it-all',
+    title: 'Spend It All',
+    number: '07',
+    category: 'Economy / Sandbox',
+    description: 'Start with nothing, build a fortune, and test how far your economic empire can go.',
+    long: 'A wealth, business, building, and economy sandbox for turning small earnings into businesses, property, cities, and an empire with no finish line.',
+    url: 'https://spend-ut-all.vercel.app/',
+    signal: 'WEALTH LAB',
+    accent: 'economy',
+  },
 ];
 
 export function gameDetailPath(slug: string) {

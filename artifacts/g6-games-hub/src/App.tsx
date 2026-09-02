@@ -202,7 +202,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 }
 
 function SignalStrip() {
-  return <div className="signal-strip"><span>GSix Games Hub</span> six playable signals <span>◆</span> built for the curious <span>◆</span> share something grand <span>◆</span> chapter 0 / connect local:200</div>;
+  return <div className="signal-strip"><span>GSix Games Hub</span> seven playable signals <span>◆</span> built for the curious <span>◆</span> share something grand <span>◆</span> chapter 0 / connect local:200</div>;
 }
 
 function Home() {
@@ -233,7 +233,7 @@ function Home() {
       </section>
       <section className="manifesto"><h2>Small doors.<br />Big worlds.</h2><p>GSix is a place for experiments with enough polish to become rituals. We make the kind of internet you want to return to.</p></section>
       <section className="section container-g6">
-        <div className="section-head"><div><span className="eyebrow">Network map</span><h2 className="section-title">Six ways<br />in.</h2></div><p className="section-intro">Every room has its own weather. Pick the one that sounds like your kind of night.</p></div>
+        <div className="section-head"><div><span className="eyebrow">Network map</span><h2 className="section-title">Seven ways<br />in.</h2></div><p className="section-intro">Every room has its own weather. Pick the one that sounds like your kind of night.</p></div>
         <div className="network-grid">
           {games.map((game) => <Link href={gameDetailPath(game.slug)} className={`network-card ${game.accent}`} key={game.slug}><div><span className="card-no">{game.number} / {game.signal}</span><h3>{game.title}</h3><p>{game.description}</p></div><span className="card-arrow">↗</span></Link>)}
         </div>
@@ -247,10 +247,10 @@ function Home() {
 function Games() {
   const [filter, setFilter] = useState('All signals');
   const [search, setSearch] = useState('');
-  const filters = ['All signals', 'Narrative', 'Interface', 'Language', 'Utility', 'Action'];
+  const filters = ['All signals', 'Narrative', 'Interface', 'Language', 'Utility', 'Action', 'Economy'];
   const visible = games.filter((g) => (filter === 'All signals' || g.category.toLowerCase().includes(filter.toLowerCase())) && `${g.title} ${g.description}`.toLowerCase().includes(search.toLowerCase()));
   const social = useGameSocial();
-  return <Shell><main id="main-content"><section className="page-top container-g6"><span className="eyebrow">GSix Games / Directory</span><h1>CHOOSE<br /><span className="text-aqua">YOUR</span><br />DOOR.</h1><p>Six small worlds, each with a different frequency. Open one. Keep it open.</p></section><section className="container-g6"><div className="directory-toolbar"><div className="filter-row">{filters.map((f) => <button type="button" className={`filter-button ${filter === f ? 'active' : ''}`} key={f} onClick={() => setFilter(f)}>{f}</button>)}</div><input className="search-input" type="search" placeholder="Search the network" value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Search games" /></div>{social.isError && <p className="social-status error" role="status">Community signals are offline. You can still enter every door.</p>}<div className="games-list">{visible.map((game) => <GameTile game={game} stat={social.getStat(game.slug)} pending={social.starMutation.isPending} onToggle={() => social.toggleStar(game.slug, !social.getStat(game.slug)?.starred)} key={game.slug} />)}</div>{visible.length === 0 && <div className="info-panel" style={{ marginBottom: 100 }}><h3>No signal found.</h3><p>Try a different frequency. The network is small, but it is particular.</p></div>}</section></main></Shell>;
+  return <Shell><main id="main-content"><section className="page-top container-g6"><span className="eyebrow">GSix Games / Directory</span><h1>CHOOSE<br /><span className="text-aqua">YOUR</span><br />DOOR.</h1><p>Seven small worlds, each with a different frequency. Open one. Keep it open.</p></section><section className="container-g6"><div className="directory-toolbar"><div className="filter-row">{filters.map((f) => <button type="button" className={`filter-button ${filter === f ? 'active' : ''}`} key={f} onClick={() => setFilter(f)}>{f}</button>)}</div><input className="search-input" type="search" placeholder="Search the network" value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Search games" /></div>{social.isError && <p className="social-status error" role="status">Community signals are offline. You can still enter every door.</p>}<div className="games-list">{visible.map((game) => <GameTile game={game} stat={social.getStat(game.slug)} pending={social.starMutation.isPending} onToggle={() => social.toggleStar(game.slug, !social.getStat(game.slug)?.starred)} key={game.slug} />)}</div>{visible.length === 0 && <div className="info-panel" style={{ marginBottom: 100 }}><h3>No signal found.</h3><p>Try a different frequency. The network is small, but it is particular.</p></div>}</section></main></Shell>;
 }
 
 function GameTile({ game, stat, onToggle, pending }: { game: Game; stat?: GameSocialStats; onToggle: () => void; pending: boolean }) {
