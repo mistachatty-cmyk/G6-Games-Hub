@@ -16,6 +16,8 @@ tags:
     description: Game social operations
   - name: members
     description: Member profiles, badges, and roles
+  - name: forum
+    description: Public community forum and moderation
 paths:
   /healthz:
     get:
@@ -243,6 +245,604 @@ paths:
                 $ref: "#/components/schemas/Error"
         "404":
           description: Member not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /forum/categories:
+    get:
+      operationId: getForumCategories
+      tags: [forum]
+      summary: List forum categories
+      responses:
+        "200":
+          description: Public forum categories with thread counts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ForumCategory"
+  /forum/categories/{slug}/threads:
+    get:
+      operationId: listForumCategoryThreads
+      tags: [forum]
+      summary: List paginated threads in a forum category
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 48
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: number
+            minimum: 1
+            multipleOf: 1
+            default: 1
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: number
+            minimum: 1
+            maximum: 50
+            multipleOf: 1
+            default: 12
+      responses:
+        "200":
+          description: Paginated public thread summaries
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForumThreadPage"
+        "404":
+          description: Forum category not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /forum/thread/{id}:
+    get:
+      operationId: getForumThreadDetail
+      tags: [forum]
+      summary: Get a public forum thread and paginated replies
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+            minimum: 1
+            multipleOf: 1
+        - name: replyPage
+          in: query
+          required: false
+          schema:
+            type: number
+            minimum: 1
+            multipleOf: 1
+            default: 1
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: number
+            minimum: 1
+            maximum: 50
+            multipleOf: 1
+            default: 20
+      responses:
+        "200":
+          description: Public thread detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForumThreadDetail"
+        "404":
+          description: Forum thread not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /forum/threads:
+    post:
+      operationId: createForumThread
+      tags: [forum]
+      summary: Create a forum thread
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForumThreadInput"
+      responses:
+        "201":
+          description: Created forum thread
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForumThreadDetail"
+        "400":
+          description: Invalid thread content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Forum category not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Too many forum actions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /forum/threads/{id}/replies:
+    post:
+      operationId: createForumReply
+      tags: [forum]
+      summary: Reply to a forum thread
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+            minimum: 1
+            multipleOf: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForumReplyInput"
+      responses:
+        "201":
+          description: Created forum reply
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForumReply"
+        "400":
+          description: Invalid reply content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Forum thread not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Thread is locked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Too many forum actions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /forum/threads/{id}:
+    patch:
+      operationId: updateForumThread
+      tags: [forum]
+      summary: Edit or remove your forum thread
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+            minimum: 1
+            multipleOf: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForumThreadUpdate"
+      responses:
+        "200":
+          description: Updated forum thread
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForumThreadDetail"
+        "400":
+          description: Invalid thread update
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Edit window or ownership denied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Forum thread not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteForumThread
+      tags: [forum]
+      summary: Remove your forum thread
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+            minimum: 1
+            multipleOf: 1
+      responses:
+        "204":
+          description: Thread removed
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Edit window or ownership denied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Forum thread not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /forum/replies/{id}:
+    patch:
+      operationId: updateForumReply
+      tags: [forum]
+      summary: Edit or remove your forum reply
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+            minimum: 1
+            multipleOf: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForumReplyUpdate"
+      responses:
+        "200":
+          description: Updated forum reply
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForumReply"
+        "400":
+          description: Invalid reply update
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Edit window or ownership denied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Forum reply not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteForumReply
+      tags: [forum]
+      summary: Remove your forum reply
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+            minimum: 1
+            multipleOf: 1
+      responses:
+        "204":
+          description: Reply removed
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Edit window or ownership denied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Forum reply not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /forum/reports:
+    post:
+      operationId: createForumReport
+      tags: [forum]
+      summary: Report a forum thread or reply
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForumReportInput"
+      responses:
+        "201":
+          description: Report received
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForumReportReceipt"
+        "400":
+          description: Invalid report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Forum content not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Too many forum actions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /forum/moderation/reports:
+    get:
+      operationId: listForumModerationReports
+      tags: [forum]
+      summary: List reports for moderators
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: number
+            minimum: 1
+            multipleOf: 1
+            default: 1
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: number
+            minimum: 1
+            maximum: 50
+            multipleOf: 1
+            default: 20
+      responses:
+        "200":
+          description: Moderation report queue
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForumModerationPage"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Moderator access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /forum/moderation/reports/{id}:
+    patch:
+      operationId: resolveForumReport
+      tags: [forum]
+      summary: Resolve or dismiss a forum report
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+            minimum: 1
+            multipleOf: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForumReportUpdate"
+      responses:
+        "200":
+          description: Updated report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForumModerationReport"
+        "400":
+          description: Invalid report update
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Moderator access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Forum report not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /forum/moderation/threads/{id}:
+    patch:
+      operationId: moderateForumThread
+      tags: [forum]
+      summary: Moderate a forum thread
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+            minimum: 1
+            multipleOf: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForumModerationInput"
+      responses:
+        "200":
+          description: Updated thread moderation state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForumThreadDetail"
+        "400":
+          description: Invalid moderation action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Moderator access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Forum thread not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /forum/moderation/replies/{id}:
+    patch:
+      operationId: moderateForumReply
+      tags: [forum]
+      summary: Moderate a forum reply
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+            minimum: 1
+            multipleOf: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForumModerationInput"
+      responses:
+        "200":
+          description: Updated reply moderation state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForumReply"
+        "400":
+          description: Invalid moderation action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Moderator access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Forum reply not found
           content:
             application/json:
               schema:
@@ -633,6 +1233,270 @@ components:
           type: string
           enum: [reviewed]
       required: [status]
+    ForumCategory:
+      type: object
+      properties:
+        id:
+          type: number
+          multipleOf: 1
+        slug:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        threadCount:
+          type: number
+          minimum: 0
+          multipleOf: 1
+      required: [id, slug, name, description, threadCount]
+    ForumAuthor:
+      type: object
+      properties:
+        userId:
+          type: string
+        displayName:
+          type: string
+        badge:
+          $ref: "#/components/schemas/Badge"
+      required: [userId, displayName, badge]
+    ForumThreadSummary:
+      type: object
+      properties:
+        id:
+          type: number
+          multipleOf: 1
+        categorySlug:
+          type: string
+        title:
+          type: string
+        excerpt:
+          type: string
+        author:
+          $ref: "#/components/schemas/ForumAuthor"
+        replyCount:
+          type: number
+          minimum: 0
+          multipleOf: 1
+        isPinned:
+          type: boolean
+        isLocked:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        lastActivityAt:
+          type: string
+          format: date-time
+      required: [id, categorySlug, title, excerpt, author, replyCount, isPinned, isLocked, createdAt, lastActivityAt]
+    ForumThread:
+      allOf:
+        - $ref: "#/components/schemas/ForumThreadSummary"
+        - type: object
+          properties:
+            content:
+              type: string
+            canEdit:
+              type: boolean
+            canRemove:
+              type: boolean
+          required: [content, canEdit, canRemove]
+    ForumReply:
+      type: object
+      properties:
+        id:
+          type: number
+          multipleOf: 1
+        threadId:
+          type: number
+          multipleOf: 1
+        content:
+          type: string
+        author:
+          $ref: "#/components/schemas/ForumAuthor"
+        canEdit:
+          type: boolean
+        canRemove:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, threadId, content, author, canEdit, canRemove, createdAt, updatedAt]
+    ForumPageInfo:
+      type: object
+      properties:
+        page:
+          type: number
+          minimum: 1
+          multipleOf: 1
+        pageSize:
+          type: number
+          minimum: 1
+          multipleOf: 1
+        total:
+          type: number
+          minimum: 0
+          multipleOf: 1
+        totalPages:
+          type: number
+          minimum: 0
+          multipleOf: 1
+      required: [page, pageSize, total, totalPages]
+    ForumThreadPage:
+      type: object
+      properties:
+        category:
+          $ref: "#/components/schemas/ForumCategory"
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ForumThreadSummary"
+        pagination:
+          $ref: "#/components/schemas/ForumPageInfo"
+      required: [category, items, pagination]
+    ForumThreadDetail:
+      type: object
+      properties:
+        thread:
+          $ref: "#/components/schemas/ForumThread"
+        replies:
+          type: array
+          items:
+            $ref: "#/components/schemas/ForumReply"
+        pagination:
+          $ref: "#/components/schemas/ForumPageInfo"
+      required: [thread, replies, pagination]
+    ForumThreadInput:
+      type: object
+      properties:
+        categorySlug:
+          type: string
+          minLength: 1
+          maxLength: 48
+        title:
+          type: string
+          minLength: 4
+          maxLength: 120
+        content:
+          type: string
+          minLength: 10
+          maxLength: 5000
+      required: [categorySlug, title, content]
+      additionalProperties: false
+    ForumThreadUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 4
+          maxLength: 120
+        content:
+          type: string
+          minLength: 10
+          maxLength: 5000
+        remove:
+          type: boolean
+      minProperties: 1
+      additionalProperties: false
+    ForumReplyInput:
+      type: object
+      properties:
+        content:
+          type: string
+          minLength: 2
+          maxLength: 3000
+      required: [content]
+      additionalProperties: false
+    ForumReplyUpdate:
+      type: object
+      properties:
+        content:
+          type: string
+          minLength: 2
+          maxLength: 3000
+        remove:
+          type: boolean
+      minProperties: 1
+      additionalProperties: false
+    ForumReportInput:
+      type: object
+      properties:
+        targetType:
+          type: string
+          enum: [thread, reply]
+        targetId:
+          type: number
+          minimum: 1
+          multipleOf: 1
+        reason:
+          type: string
+          minLength: 10
+          maxLength: 500
+      required: [targetType, targetId, reason]
+      additionalProperties: false
+    ForumReportReceipt:
+      type: object
+      properties:
+        received:
+          type: boolean
+        message:
+          type: string
+      required: [received, message]
+    ForumModerationInput:
+      type: object
+      properties:
+        action:
+          type: string
+          enum: [hide, remove, restore, lock, unlock, pin, unpin]
+        reason:
+          type: string
+          maxLength: 500
+      required: [action]
+      additionalProperties: false
+    ForumReportUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [resolved, dismissed]
+      required: [status]
+      additionalProperties: false
+    ForumModerationReport:
+      type: object
+      properties:
+        id:
+          type: number
+          multipleOf: 1
+        targetType:
+          type: string
+          enum: [thread, reply]
+        targetId:
+          type: number
+          multipleOf: 1
+        reason:
+          type: string
+        status:
+          type: string
+          enum: [pending, resolved, dismissed]
+        reporter:
+          $ref: "#/components/schemas/ForumAuthor"
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, targetType, targetId, reason, status, reporter, createdAt]
+    ForumModerationPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ForumModerationReport"
+        pagination:
+          $ref: "#/components/schemas/ForumPageInfo"
+      required: [items, pagination]
     Error:
       type: object
       properties:

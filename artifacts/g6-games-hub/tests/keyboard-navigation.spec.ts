@@ -28,11 +28,11 @@ test.describe('keyboard navigation', () => {
 
     const primaryNavigation = page.getByRole('navigation', { name: 'Primary navigation' });
     const navigationLinks = primaryNavigation.getByRole('link');
-    await expect(navigationLinks).toHaveCount(4);
-    for (let index = 0; index < 4; index += 1) {
+    await expect(navigationLinks).toHaveCount(5);
+    for (let index = 0; index < 5; index += 1) {
       await navigationLinks.nth(index).focus();
       await expect(navigationLinks.nth(index)).toBeFocused();
-      await expect(navigationLinks.nth(index)).toHaveAttribute('href', /^(\/|\/games|\/hire|\/profile)$/);
+      await expect(navigationLinks.nth(index)).toHaveAttribute('href', /^(\/|\/games|\/forum|\/hire|\/profile)$/);
     }
   });
 
@@ -143,6 +143,41 @@ test.describe('visitor actions', () => {
     await expect(page.getByRole('heading', { name: 'Identify yourself.' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Sign in to control room' })).toBeVisible();
     await expect(page.getByText('Sign-in required')).toBeVisible();
+  });
+
+  test('browses the public forum and shows the signed-out composer state', async ({ page }) => {
+    await page.route('**/api/forum/categories', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([{
+          id: 1,
+          slug: 'game-room',
+          name: 'Game Room',
+          description: 'Talk about the games.',
+          threadCount: 0,
+        }]),
+      });
+    });
+    await page.route('**/api/forum/categories/game-room/threads**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          category: { id: 1, slug: 'game-room', name: 'Game Room', description: 'Talk about the games.', threadCount: 0 },
+          items: [],
+          pagination: { page: 1, pageSize: 12, total: 0, totalPages: 0 },
+        }),
+      });
+    });
+
+    await page.goto('/forum');
+
+    await expect(page.getByRole('heading', { name: 'THE FORUM.' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: /Game Room/ })).toBeVisible();
+    await expect(page.getByText('No threads here yet.')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Have a signal to add?' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sign in to post' })).toBeVisible();
   });
 });
 

@@ -191,9 +191,250 @@ export interface FeedbackReviewInput {
   status: FeedbackReviewInputStatus;
 }
 
+export interface ForumCategory {
+  id: number;
+  slug: string;
+  name: string;
+  description: string;
+  /** @minimum 0 */
+  threadCount: number;
+}
+
+export interface ForumAuthor {
+  userId: string;
+  displayName: string;
+  badge: Badge;
+}
+
+export interface ForumThreadSummary {
+  id: number;
+  categorySlug: string;
+  title: string;
+  excerpt: string;
+  author: ForumAuthor;
+  /** @minimum 0 */
+  replyCount: number;
+  isPinned: boolean;
+  isLocked: boolean;
+  createdAt: string;
+  lastActivityAt: string;
+}
+
+export type ForumThread = ForumThreadSummary & {
+  content: string;
+  canEdit: boolean;
+  canRemove: boolean;
+};
+
+export interface ForumReply {
+  id: number;
+  threadId: number;
+  content: string;
+  author: ForumAuthor;
+  canEdit: boolean;
+  canRemove: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ForumPageInfo {
+  /** @minimum 1 */
+  page: number;
+  /** @minimum 1 */
+  pageSize: number;
+  /** @minimum 0 */
+  total: number;
+  /** @minimum 0 */
+  totalPages: number;
+}
+
+export interface ForumThreadPage {
+  category: ForumCategory;
+  items: ForumThreadSummary[];
+  pagination: ForumPageInfo;
+}
+
+export interface ForumThreadDetail {
+  thread: ForumThread;
+  replies: ForumReply[];
+  pagination: ForumPageInfo;
+}
+
+export interface ForumThreadInput {
+  /**
+     * @minLength 1
+     * @maxLength 48
+     */
+  categorySlug: string;
+  /**
+     * @minLength 4
+     * @maxLength 120
+     */
+  title: string;
+  /**
+     * @minLength 10
+     * @maxLength 5000
+     */
+  content: string;
+}
+
+export interface ForumThreadUpdate {
+  /**
+     * @minLength 4
+     * @maxLength 120
+     */
+  title?: string;
+  /**
+     * @minLength 10
+     * @maxLength 5000
+     */
+  content?: string;
+  remove?: boolean;
+}
+
+export interface ForumReplyInput {
+  /**
+     * @minLength 2
+     * @maxLength 3000
+     */
+  content: string;
+}
+
+export interface ForumReplyUpdate {
+  /**
+     * @minLength 2
+     * @maxLength 3000
+     */
+  content?: string;
+  remove?: boolean;
+}
+
+export type ForumReportInputTargetType = typeof ForumReportInputTargetType[keyof typeof ForumReportInputTargetType];
+
+
+export const ForumReportInputTargetType = {
+  thread: 'thread',
+  reply: 'reply',
+} as const;
+
+export interface ForumReportInput {
+  targetType: ForumReportInputTargetType;
+  /** @minimum 1 */
+  targetId: number;
+  /**
+     * @minLength 10
+     * @maxLength 500
+     */
+  reason: string;
+}
+
+export interface ForumReportReceipt {
+  received: boolean;
+  message: string;
+}
+
+export type ForumModerationInputAction = typeof ForumModerationInputAction[keyof typeof ForumModerationInputAction];
+
+
+export const ForumModerationInputAction = {
+  hide: 'hide',
+  remove: 'remove',
+  restore: 'restore',
+  lock: 'lock',
+  unlock: 'unlock',
+  pin: 'pin',
+  unpin: 'unpin',
+} as const;
+
+export interface ForumModerationInput {
+  action: ForumModerationInputAction;
+  /** @maxLength 500 */
+  reason?: string;
+}
+
+export type ForumReportUpdateStatus = typeof ForumReportUpdateStatus[keyof typeof ForumReportUpdateStatus];
+
+
+export const ForumReportUpdateStatus = {
+  resolved: 'resolved',
+  dismissed: 'dismissed',
+} as const;
+
+export interface ForumReportUpdate {
+  status: ForumReportUpdateStatus;
+}
+
+export type ForumModerationReportTargetType = typeof ForumModerationReportTargetType[keyof typeof ForumModerationReportTargetType];
+
+
+export const ForumModerationReportTargetType = {
+  thread: 'thread',
+  reply: 'reply',
+} as const;
+
+export type ForumModerationReportStatus = typeof ForumModerationReportStatus[keyof typeof ForumModerationReportStatus];
+
+
+export const ForumModerationReportStatus = {
+  pending: 'pending',
+  resolved: 'resolved',
+  dismissed: 'dismissed',
+} as const;
+
+export interface ForumModerationReport {
+  id: number;
+  targetType: ForumModerationReportTargetType;
+  targetId: number;
+  reason: string;
+  status: ForumModerationReportStatus;
+  reporter: ForumAuthor;
+  createdAt: string;
+}
+
+export interface ForumModerationPage {
+  items: ForumModerationReport[];
+  pagination: ForumPageInfo;
+}
+
 export interface Error {
   error: string;
 }
+
+export type ListForumCategoryThreadsParams = {
+/**
+ * @minimum 1
+ */
+page?: number;
+/**
+ * @minimum 1
+ * @maximum 50
+ */
+pageSize?: number;
+};
+
+export type GetForumThreadDetailParams = {
+/**
+ * @minimum 1
+ */
+replyPage?: number;
+/**
+ * @minimum 1
+ * @maximum 50
+ */
+pageSize?: number;
+};
+
+export type ListForumModerationReportsParams = {
+/**
+ * @minimum 1
+ */
+page?: number;
+/**
+ * @minimum 1
+ * @maximum 50
+ */
+pageSize?: number;
+};
 
 export type GetGameSocialStatsParams = {
 /**

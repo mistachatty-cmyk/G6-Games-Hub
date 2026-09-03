@@ -201,6 +201,808 @@ export const UpdateMemberRoleResponse = zod.object({
 
 
 /**
+ * @summary List forum categories
+ */
+export const getForumCategoriesResponseIdMultipleOf = 1;
+
+export const getForumCategoriesResponseThreadCountMin = 0;
+export const getForumCategoriesResponseThreadCountMultipleOf = 1;
+
+
+
+export const GetForumCategoriesResponseItem = zod.object({
+  "id": zod.number().multipleOf(getForumCategoriesResponseIdMultipleOf),
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "threadCount": zod.number().min(getForumCategoriesResponseThreadCountMin).multipleOf(getForumCategoriesResponseThreadCountMultipleOf)
+})
+export const GetForumCategoriesResponse = zod.array(GetForumCategoriesResponseItem)
+
+
+/**
+ * @summary List paginated threads in a forum category
+ */
+export const listForumCategoryThreadsPathSlugMax = 48;
+
+
+
+export const ListForumCategoryThreadsParams = zod.object({
+  "slug": zod.coerce.string().min(1).max(listForumCategoryThreadsPathSlugMax)
+})
+
+export const listForumCategoryThreadsQueryPageDefault = 1;
+export const listForumCategoryThreadsQueryPageMultipleOf = 1;
+
+export const listForumCategoryThreadsQueryPageSizeDefault = 12;
+export const listForumCategoryThreadsQueryPageSizeMax = 50;
+export const listForumCategoryThreadsQueryPageSizeMultipleOf = 1;
+
+
+
+export const ListForumCategoryThreadsQueryParams = zod.object({
+  "page": zod.coerce.number().min(1).multipleOf(listForumCategoryThreadsQueryPageMultipleOf).default(listForumCategoryThreadsQueryPageDefault),
+  "pageSize": zod.coerce.number().min(1).max(listForumCategoryThreadsQueryPageSizeMax).multipleOf(listForumCategoryThreadsQueryPageSizeMultipleOf).default(listForumCategoryThreadsQueryPageSizeDefault)
+})
+
+export const listForumCategoryThreadsResponseCategoryIdMultipleOf = 1;
+
+export const listForumCategoryThreadsResponseCategoryThreadCountMin = 0;
+export const listForumCategoryThreadsResponseCategoryThreadCountMultipleOf = 1;
+
+export const listForumCategoryThreadsResponseItemsItemIdMultipleOf = 1;
+
+export const listForumCategoryThreadsResponseItemsItemReplyCountMin = 0;
+export const listForumCategoryThreadsResponseItemsItemReplyCountMultipleOf = 1;
+
+export const listForumCategoryThreadsResponsePaginationPageMultipleOf = 1;
+
+export const listForumCategoryThreadsResponsePaginationPageSizeMultipleOf = 1;
+
+export const listForumCategoryThreadsResponsePaginationTotalMin = 0;
+export const listForumCategoryThreadsResponsePaginationTotalMultipleOf = 1;
+
+export const listForumCategoryThreadsResponsePaginationTotalPagesMin = 0;
+export const listForumCategoryThreadsResponsePaginationTotalPagesMultipleOf = 1;
+
+
+
+export const ListForumCategoryThreadsResponse = zod.object({
+  "category": zod.object({
+  "id": zod.number().multipleOf(listForumCategoryThreadsResponseCategoryIdMultipleOf),
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "threadCount": zod.number().min(listForumCategoryThreadsResponseCategoryThreadCountMin).multipleOf(listForumCategoryThreadsResponseCategoryThreadCountMultipleOf)
+}),
+  "items": zod.array(zod.object({
+  "id": zod.number().multipleOf(listForumCategoryThreadsResponseItemsItemIdMultipleOf),
+  "categorySlug": zod.string(),
+  "title": zod.string(),
+  "excerpt": zod.string(),
+  "author": zod.object({
+  "userId": zod.string(),
+  "displayName": zod.string(),
+  "badge": zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "isDefault": zod.boolean(),
+  "isSelectable": zod.boolean()
+})
+}),
+  "replyCount": zod.number().min(listForumCategoryThreadsResponseItemsItemReplyCountMin).multipleOf(listForumCategoryThreadsResponseItemsItemReplyCountMultipleOf),
+  "isPinned": zod.boolean(),
+  "isLocked": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "lastActivityAt": zod.coerce.date()
+})),
+  "pagination": zod.object({
+  "page": zod.number().min(1).multipleOf(listForumCategoryThreadsResponsePaginationPageMultipleOf),
+  "pageSize": zod.number().min(1).multipleOf(listForumCategoryThreadsResponsePaginationPageSizeMultipleOf),
+  "total": zod.number().min(listForumCategoryThreadsResponsePaginationTotalMin).multipleOf(listForumCategoryThreadsResponsePaginationTotalMultipleOf),
+  "totalPages": zod.number().min(listForumCategoryThreadsResponsePaginationTotalPagesMin).multipleOf(listForumCategoryThreadsResponsePaginationTotalPagesMultipleOf)
+})
+})
+
+
+/**
+ * @summary Get a public forum thread and paginated replies
+ */
+export const getForumThreadDetailPathIdMultipleOf = 1;
+
+
+
+export const GetForumThreadDetailParams = zod.object({
+  "id": zod.coerce.number().min(1).multipleOf(getForumThreadDetailPathIdMultipleOf)
+})
+
+export const getForumThreadDetailQueryReplyPageDefault = 1;
+export const getForumThreadDetailQueryReplyPageMultipleOf = 1;
+
+export const getForumThreadDetailQueryPageSizeDefault = 20;
+export const getForumThreadDetailQueryPageSizeMax = 50;
+export const getForumThreadDetailQueryPageSizeMultipleOf = 1;
+
+
+
+export const GetForumThreadDetailQueryParams = zod.object({
+  "replyPage": zod.coerce.number().min(1).multipleOf(getForumThreadDetailQueryReplyPageMultipleOf).default(getForumThreadDetailQueryReplyPageDefault),
+  "pageSize": zod.coerce.number().min(1).max(getForumThreadDetailQueryPageSizeMax).multipleOf(getForumThreadDetailQueryPageSizeMultipleOf).default(getForumThreadDetailQueryPageSizeDefault)
+})
+
+export const getForumThreadDetailResponseThreadOneIdMultipleOf = 1;
+
+export const getForumThreadDetailResponseThreadOneReplyCountMin = 0;
+export const getForumThreadDetailResponseThreadOneReplyCountMultipleOf = 1;
+
+export const getForumThreadDetailResponseRepliesItemIdMultipleOf = 1;
+
+export const getForumThreadDetailResponseRepliesItemThreadIdMultipleOf = 1;
+
+export const getForumThreadDetailResponsePaginationPageMultipleOf = 1;
+
+export const getForumThreadDetailResponsePaginationPageSizeMultipleOf = 1;
+
+export const getForumThreadDetailResponsePaginationTotalMin = 0;
+export const getForumThreadDetailResponsePaginationTotalMultipleOf = 1;
+
+export const getForumThreadDetailResponsePaginationTotalPagesMin = 0;
+export const getForumThreadDetailResponsePaginationTotalPagesMultipleOf = 1;
+
+
+
+export const GetForumThreadDetailResponse = zod.object({
+  "thread": zod.object({
+  "id": zod.number().multipleOf(getForumThreadDetailResponseThreadOneIdMultipleOf),
+  "categorySlug": zod.string(),
+  "title": zod.string(),
+  "excerpt": zod.string(),
+  "author": zod.object({
+  "userId": zod.string(),
+  "displayName": zod.string(),
+  "badge": zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "isDefault": zod.boolean(),
+  "isSelectable": zod.boolean()
+})
+}),
+  "replyCount": zod.number().min(getForumThreadDetailResponseThreadOneReplyCountMin).multipleOf(getForumThreadDetailResponseThreadOneReplyCountMultipleOf),
+  "isPinned": zod.boolean(),
+  "isLocked": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "lastActivityAt": zod.coerce.date()
+}).and(zod.object({
+  "content": zod.string(),
+  "canEdit": zod.boolean(),
+  "canRemove": zod.boolean()
+})),
+  "replies": zod.array(zod.object({
+  "id": zod.number().multipleOf(getForumThreadDetailResponseRepliesItemIdMultipleOf),
+  "threadId": zod.number().multipleOf(getForumThreadDetailResponseRepliesItemThreadIdMultipleOf),
+  "content": zod.string(),
+  "author": zod.object({
+  "userId": zod.string(),
+  "displayName": zod.string(),
+  "badge": zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "isDefault": zod.boolean(),
+  "isSelectable": zod.boolean()
+})
+}),
+  "canEdit": zod.boolean(),
+  "canRemove": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})),
+  "pagination": zod.object({
+  "page": zod.number().min(1).multipleOf(getForumThreadDetailResponsePaginationPageMultipleOf),
+  "pageSize": zod.number().min(1).multipleOf(getForumThreadDetailResponsePaginationPageSizeMultipleOf),
+  "total": zod.number().min(getForumThreadDetailResponsePaginationTotalMin).multipleOf(getForumThreadDetailResponsePaginationTotalMultipleOf),
+  "totalPages": zod.number().min(getForumThreadDetailResponsePaginationTotalPagesMin).multipleOf(getForumThreadDetailResponsePaginationTotalPagesMultipleOf)
+})
+})
+
+
+/**
+ * @summary Create a forum thread
+ */
+export const createForumThreadBodyCategorySlugMax = 48;
+
+export const createForumThreadBodyTitleMin = 4;
+export const createForumThreadBodyTitleMax = 120;
+
+export const createForumThreadBodyContentMin = 10;
+export const createForumThreadBodyContentMax = 5000;
+
+
+
+export const CreateForumThreadBody = zod.object({
+  "categorySlug": zod.string().min(1).max(createForumThreadBodyCategorySlugMax),
+  "title": zod.string().min(createForumThreadBodyTitleMin).max(createForumThreadBodyTitleMax),
+  "content": zod.string().min(createForumThreadBodyContentMin).max(createForumThreadBodyContentMax)
+})
+
+export const createForumThreadResponseThreadOneIdMultipleOf = 1;
+
+export const createForumThreadResponseThreadOneReplyCountMin = 0;
+export const createForumThreadResponseThreadOneReplyCountMultipleOf = 1;
+
+export const createForumThreadResponseRepliesItemIdMultipleOf = 1;
+
+export const createForumThreadResponseRepliesItemThreadIdMultipleOf = 1;
+
+export const createForumThreadResponsePaginationPageMultipleOf = 1;
+
+export const createForumThreadResponsePaginationPageSizeMultipleOf = 1;
+
+export const createForumThreadResponsePaginationTotalMin = 0;
+export const createForumThreadResponsePaginationTotalMultipleOf = 1;
+
+export const createForumThreadResponsePaginationTotalPagesMin = 0;
+export const createForumThreadResponsePaginationTotalPagesMultipleOf = 1;
+
+
+
+export const CreateForumThreadResponse = zod.object({
+  "thread": zod.object({
+  "id": zod.number().multipleOf(createForumThreadResponseThreadOneIdMultipleOf),
+  "categorySlug": zod.string(),
+  "title": zod.string(),
+  "excerpt": zod.string(),
+  "author": zod.object({
+  "userId": zod.string(),
+  "displayName": zod.string(),
+  "badge": zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "isDefault": zod.boolean(),
+  "isSelectable": zod.boolean()
+})
+}),
+  "replyCount": zod.number().min(createForumThreadResponseThreadOneReplyCountMin).multipleOf(createForumThreadResponseThreadOneReplyCountMultipleOf),
+  "isPinned": zod.boolean(),
+  "isLocked": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "lastActivityAt": zod.coerce.date()
+}).and(zod.object({
+  "content": zod.string(),
+  "canEdit": zod.boolean(),
+  "canRemove": zod.boolean()
+})),
+  "replies": zod.array(zod.object({
+  "id": zod.number().multipleOf(createForumThreadResponseRepliesItemIdMultipleOf),
+  "threadId": zod.number().multipleOf(createForumThreadResponseRepliesItemThreadIdMultipleOf),
+  "content": zod.string(),
+  "author": zod.object({
+  "userId": zod.string(),
+  "displayName": zod.string(),
+  "badge": zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "isDefault": zod.boolean(),
+  "isSelectable": zod.boolean()
+})
+}),
+  "canEdit": zod.boolean(),
+  "canRemove": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})),
+  "pagination": zod.object({
+  "page": zod.number().min(1).multipleOf(createForumThreadResponsePaginationPageMultipleOf),
+  "pageSize": zod.number().min(1).multipleOf(createForumThreadResponsePaginationPageSizeMultipleOf),
+  "total": zod.number().min(createForumThreadResponsePaginationTotalMin).multipleOf(createForumThreadResponsePaginationTotalMultipleOf),
+  "totalPages": zod.number().min(createForumThreadResponsePaginationTotalPagesMin).multipleOf(createForumThreadResponsePaginationTotalPagesMultipleOf)
+})
+})
+
+
+/**
+ * @summary Reply to a forum thread
+ */
+export const createForumReplyPathIdMultipleOf = 1;
+
+
+
+export const CreateForumReplyParams = zod.object({
+  "id": zod.coerce.number().min(1).multipleOf(createForumReplyPathIdMultipleOf)
+})
+
+export const createForumReplyBodyContentMin = 2;
+export const createForumReplyBodyContentMax = 3000;
+
+
+
+export const CreateForumReplyBody = zod.object({
+  "content": zod.string().min(createForumReplyBodyContentMin).max(createForumReplyBodyContentMax)
+})
+
+export const createForumReplyResponseIdMultipleOf = 1;
+
+export const createForumReplyResponseThreadIdMultipleOf = 1;
+
+
+
+export const CreateForumReplyResponse = zod.object({
+  "id": zod.number().multipleOf(createForumReplyResponseIdMultipleOf),
+  "threadId": zod.number().multipleOf(createForumReplyResponseThreadIdMultipleOf),
+  "content": zod.string(),
+  "author": zod.object({
+  "userId": zod.string(),
+  "displayName": zod.string(),
+  "badge": zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "isDefault": zod.boolean(),
+  "isSelectable": zod.boolean()
+})
+}),
+  "canEdit": zod.boolean(),
+  "canRemove": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Edit or remove your forum thread
+ */
+export const updateForumThreadPathIdMultipleOf = 1;
+
+
+
+export const UpdateForumThreadParams = zod.object({
+  "id": zod.coerce.number().min(1).multipleOf(updateForumThreadPathIdMultipleOf)
+})
+
+export const updateForumThreadBodyTitleMin = 4;
+export const updateForumThreadBodyTitleMax = 120;
+
+export const updateForumThreadBodyContentMin = 10;
+export const updateForumThreadBodyContentMax = 5000;
+
+
+
+export const UpdateForumThreadBody = zod.object({
+  "title": zod.string().min(updateForumThreadBodyTitleMin).max(updateForumThreadBodyTitleMax).optional(),
+  "content": zod.string().min(updateForumThreadBodyContentMin).max(updateForumThreadBodyContentMax).optional(),
+  "remove": zod.boolean().optional()
+})
+
+export const updateForumThreadResponseThreadOneIdMultipleOf = 1;
+
+export const updateForumThreadResponseThreadOneReplyCountMin = 0;
+export const updateForumThreadResponseThreadOneReplyCountMultipleOf = 1;
+
+export const updateForumThreadResponseRepliesItemIdMultipleOf = 1;
+
+export const updateForumThreadResponseRepliesItemThreadIdMultipleOf = 1;
+
+export const updateForumThreadResponsePaginationPageMultipleOf = 1;
+
+export const updateForumThreadResponsePaginationPageSizeMultipleOf = 1;
+
+export const updateForumThreadResponsePaginationTotalMin = 0;
+export const updateForumThreadResponsePaginationTotalMultipleOf = 1;
+
+export const updateForumThreadResponsePaginationTotalPagesMin = 0;
+export const updateForumThreadResponsePaginationTotalPagesMultipleOf = 1;
+
+
+
+export const UpdateForumThreadResponse = zod.object({
+  "thread": zod.object({
+  "id": zod.number().multipleOf(updateForumThreadResponseThreadOneIdMultipleOf),
+  "categorySlug": zod.string(),
+  "title": zod.string(),
+  "excerpt": zod.string(),
+  "author": zod.object({
+  "userId": zod.string(),
+  "displayName": zod.string(),
+  "badge": zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "isDefault": zod.boolean(),
+  "isSelectable": zod.boolean()
+})
+}),
+  "replyCount": zod.number().min(updateForumThreadResponseThreadOneReplyCountMin).multipleOf(updateForumThreadResponseThreadOneReplyCountMultipleOf),
+  "isPinned": zod.boolean(),
+  "isLocked": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "lastActivityAt": zod.coerce.date()
+}).and(zod.object({
+  "content": zod.string(),
+  "canEdit": zod.boolean(),
+  "canRemove": zod.boolean()
+})),
+  "replies": zod.array(zod.object({
+  "id": zod.number().multipleOf(updateForumThreadResponseRepliesItemIdMultipleOf),
+  "threadId": zod.number().multipleOf(updateForumThreadResponseRepliesItemThreadIdMultipleOf),
+  "content": zod.string(),
+  "author": zod.object({
+  "userId": zod.string(),
+  "displayName": zod.string(),
+  "badge": zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "isDefault": zod.boolean(),
+  "isSelectable": zod.boolean()
+})
+}),
+  "canEdit": zod.boolean(),
+  "canRemove": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})),
+  "pagination": zod.object({
+  "page": zod.number().min(1).multipleOf(updateForumThreadResponsePaginationPageMultipleOf),
+  "pageSize": zod.number().min(1).multipleOf(updateForumThreadResponsePaginationPageSizeMultipleOf),
+  "total": zod.number().min(updateForumThreadResponsePaginationTotalMin).multipleOf(updateForumThreadResponsePaginationTotalMultipleOf),
+  "totalPages": zod.number().min(updateForumThreadResponsePaginationTotalPagesMin).multipleOf(updateForumThreadResponsePaginationTotalPagesMultipleOf)
+})
+})
+
+
+/**
+ * @summary Remove your forum thread
+ */
+export const deleteForumThreadPathIdMultipleOf = 1;
+
+
+
+export const DeleteForumThreadParams = zod.object({
+  "id": zod.coerce.number().min(1).multipleOf(deleteForumThreadPathIdMultipleOf)
+})
+
+export const DeleteForumThreadResponse = zod.void()
+
+
+/**
+ * @summary Edit or remove your forum reply
+ */
+export const updateForumReplyPathIdMultipleOf = 1;
+
+
+
+export const UpdateForumReplyParams = zod.object({
+  "id": zod.coerce.number().min(1).multipleOf(updateForumReplyPathIdMultipleOf)
+})
+
+export const updateForumReplyBodyContentMin = 2;
+export const updateForumReplyBodyContentMax = 3000;
+
+
+
+export const UpdateForumReplyBody = zod.object({
+  "content": zod.string().min(updateForumReplyBodyContentMin).max(updateForumReplyBodyContentMax).optional(),
+  "remove": zod.boolean().optional()
+})
+
+export const updateForumReplyResponseIdMultipleOf = 1;
+
+export const updateForumReplyResponseThreadIdMultipleOf = 1;
+
+
+
+export const UpdateForumReplyResponse = zod.object({
+  "id": zod.number().multipleOf(updateForumReplyResponseIdMultipleOf),
+  "threadId": zod.number().multipleOf(updateForumReplyResponseThreadIdMultipleOf),
+  "content": zod.string(),
+  "author": zod.object({
+  "userId": zod.string(),
+  "displayName": zod.string(),
+  "badge": zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "isDefault": zod.boolean(),
+  "isSelectable": zod.boolean()
+})
+}),
+  "canEdit": zod.boolean(),
+  "canRemove": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Remove your forum reply
+ */
+export const deleteForumReplyPathIdMultipleOf = 1;
+
+
+
+export const DeleteForumReplyParams = zod.object({
+  "id": zod.coerce.number().min(1).multipleOf(deleteForumReplyPathIdMultipleOf)
+})
+
+export const DeleteForumReplyResponse = zod.void()
+
+
+/**
+ * @summary Report a forum thread or reply
+ */
+export const createForumReportBodyTargetIdMultipleOf = 1;
+
+export const createForumReportBodyReasonMin = 10;
+export const createForumReportBodyReasonMax = 500;
+
+
+
+export const CreateForumReportBody = zod.object({
+  "targetType": zod.enum(['thread', 'reply']),
+  "targetId": zod.number().min(1).multipleOf(createForumReportBodyTargetIdMultipleOf),
+  "reason": zod.string().min(createForumReportBodyReasonMin).max(createForumReportBodyReasonMax)
+})
+
+export const CreateForumReportResponse = zod.object({
+  "received": zod.boolean(),
+  "message": zod.string()
+})
+
+
+/**
+ * @summary List reports for moderators
+ */
+export const listForumModerationReportsQueryPageDefault = 1;
+export const listForumModerationReportsQueryPageMultipleOf = 1;
+
+export const listForumModerationReportsQueryPageSizeDefault = 20;
+export const listForumModerationReportsQueryPageSizeMax = 50;
+export const listForumModerationReportsQueryPageSizeMultipleOf = 1;
+
+
+
+export const ListForumModerationReportsQueryParams = zod.object({
+  "page": zod.coerce.number().min(1).multipleOf(listForumModerationReportsQueryPageMultipleOf).default(listForumModerationReportsQueryPageDefault),
+  "pageSize": zod.coerce.number().min(1).max(listForumModerationReportsQueryPageSizeMax).multipleOf(listForumModerationReportsQueryPageSizeMultipleOf).default(listForumModerationReportsQueryPageSizeDefault)
+})
+
+export const listForumModerationReportsResponseItemsItemIdMultipleOf = 1;
+
+export const listForumModerationReportsResponseItemsItemTargetIdMultipleOf = 1;
+
+export const listForumModerationReportsResponsePaginationPageMultipleOf = 1;
+
+export const listForumModerationReportsResponsePaginationPageSizeMultipleOf = 1;
+
+export const listForumModerationReportsResponsePaginationTotalMin = 0;
+export const listForumModerationReportsResponsePaginationTotalMultipleOf = 1;
+
+export const listForumModerationReportsResponsePaginationTotalPagesMin = 0;
+export const listForumModerationReportsResponsePaginationTotalPagesMultipleOf = 1;
+
+
+
+export const ListForumModerationReportsResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.number().multipleOf(listForumModerationReportsResponseItemsItemIdMultipleOf),
+  "targetType": zod.enum(['thread', 'reply']),
+  "targetId": zod.number().multipleOf(listForumModerationReportsResponseItemsItemTargetIdMultipleOf),
+  "reason": zod.string(),
+  "status": zod.enum(['pending', 'resolved', 'dismissed']),
+  "reporter": zod.object({
+  "userId": zod.string(),
+  "displayName": zod.string(),
+  "badge": zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "isDefault": zod.boolean(),
+  "isSelectable": zod.boolean()
+})
+}),
+  "createdAt": zod.coerce.date()
+})),
+  "pagination": zod.object({
+  "page": zod.number().min(1).multipleOf(listForumModerationReportsResponsePaginationPageMultipleOf),
+  "pageSize": zod.number().min(1).multipleOf(listForumModerationReportsResponsePaginationPageSizeMultipleOf),
+  "total": zod.number().min(listForumModerationReportsResponsePaginationTotalMin).multipleOf(listForumModerationReportsResponsePaginationTotalMultipleOf),
+  "totalPages": zod.number().min(listForumModerationReportsResponsePaginationTotalPagesMin).multipleOf(listForumModerationReportsResponsePaginationTotalPagesMultipleOf)
+})
+})
+
+
+/**
+ * @summary Resolve or dismiss a forum report
+ */
+export const resolveForumReportPathIdMultipleOf = 1;
+
+
+
+export const ResolveForumReportParams = zod.object({
+  "id": zod.coerce.number().min(1).multipleOf(resolveForumReportPathIdMultipleOf)
+})
+
+export const ResolveForumReportBody = zod.object({
+  "status": zod.enum(['resolved', 'dismissed'])
+})
+
+export const resolveForumReportResponseIdMultipleOf = 1;
+
+export const resolveForumReportResponseTargetIdMultipleOf = 1;
+
+
+
+export const ResolveForumReportResponse = zod.object({
+  "id": zod.number().multipleOf(resolveForumReportResponseIdMultipleOf),
+  "targetType": zod.enum(['thread', 'reply']),
+  "targetId": zod.number().multipleOf(resolveForumReportResponseTargetIdMultipleOf),
+  "reason": zod.string(),
+  "status": zod.enum(['pending', 'resolved', 'dismissed']),
+  "reporter": zod.object({
+  "userId": zod.string(),
+  "displayName": zod.string(),
+  "badge": zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "isDefault": zod.boolean(),
+  "isSelectable": zod.boolean()
+})
+}),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Moderate a forum thread
+ */
+export const moderateForumThreadPathIdMultipleOf = 1;
+
+
+
+export const ModerateForumThreadParams = zod.object({
+  "id": zod.coerce.number().min(1).multipleOf(moderateForumThreadPathIdMultipleOf)
+})
+
+export const moderateForumThreadBodyReasonMax = 500;
+
+
+
+export const ModerateForumThreadBody = zod.object({
+  "action": zod.enum(['hide', 'remove', 'restore', 'lock', 'unlock', 'pin', 'unpin']),
+  "reason": zod.string().max(moderateForumThreadBodyReasonMax).optional()
+})
+
+export const moderateForumThreadResponseThreadOneIdMultipleOf = 1;
+
+export const moderateForumThreadResponseThreadOneReplyCountMin = 0;
+export const moderateForumThreadResponseThreadOneReplyCountMultipleOf = 1;
+
+export const moderateForumThreadResponseRepliesItemIdMultipleOf = 1;
+
+export const moderateForumThreadResponseRepliesItemThreadIdMultipleOf = 1;
+
+export const moderateForumThreadResponsePaginationPageMultipleOf = 1;
+
+export const moderateForumThreadResponsePaginationPageSizeMultipleOf = 1;
+
+export const moderateForumThreadResponsePaginationTotalMin = 0;
+export const moderateForumThreadResponsePaginationTotalMultipleOf = 1;
+
+export const moderateForumThreadResponsePaginationTotalPagesMin = 0;
+export const moderateForumThreadResponsePaginationTotalPagesMultipleOf = 1;
+
+
+
+export const ModerateForumThreadResponse = zod.object({
+  "thread": zod.object({
+  "id": zod.number().multipleOf(moderateForumThreadResponseThreadOneIdMultipleOf),
+  "categorySlug": zod.string(),
+  "title": zod.string(),
+  "excerpt": zod.string(),
+  "author": zod.object({
+  "userId": zod.string(),
+  "displayName": zod.string(),
+  "badge": zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "isDefault": zod.boolean(),
+  "isSelectable": zod.boolean()
+})
+}),
+  "replyCount": zod.number().min(moderateForumThreadResponseThreadOneReplyCountMin).multipleOf(moderateForumThreadResponseThreadOneReplyCountMultipleOf),
+  "isPinned": zod.boolean(),
+  "isLocked": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "lastActivityAt": zod.coerce.date()
+}).and(zod.object({
+  "content": zod.string(),
+  "canEdit": zod.boolean(),
+  "canRemove": zod.boolean()
+})),
+  "replies": zod.array(zod.object({
+  "id": zod.number().multipleOf(moderateForumThreadResponseRepliesItemIdMultipleOf),
+  "threadId": zod.number().multipleOf(moderateForumThreadResponseRepliesItemThreadIdMultipleOf),
+  "content": zod.string(),
+  "author": zod.object({
+  "userId": zod.string(),
+  "displayName": zod.string(),
+  "badge": zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "isDefault": zod.boolean(),
+  "isSelectable": zod.boolean()
+})
+}),
+  "canEdit": zod.boolean(),
+  "canRemove": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})),
+  "pagination": zod.object({
+  "page": zod.number().min(1).multipleOf(moderateForumThreadResponsePaginationPageMultipleOf),
+  "pageSize": zod.number().min(1).multipleOf(moderateForumThreadResponsePaginationPageSizeMultipleOf),
+  "total": zod.number().min(moderateForumThreadResponsePaginationTotalMin).multipleOf(moderateForumThreadResponsePaginationTotalMultipleOf),
+  "totalPages": zod.number().min(moderateForumThreadResponsePaginationTotalPagesMin).multipleOf(moderateForumThreadResponsePaginationTotalPagesMultipleOf)
+})
+})
+
+
+/**
+ * @summary Moderate a forum reply
+ */
+export const moderateForumReplyPathIdMultipleOf = 1;
+
+
+
+export const ModerateForumReplyParams = zod.object({
+  "id": zod.coerce.number().min(1).multipleOf(moderateForumReplyPathIdMultipleOf)
+})
+
+export const moderateForumReplyBodyReasonMax = 500;
+
+
+
+export const ModerateForumReplyBody = zod.object({
+  "action": zod.enum(['hide', 'remove', 'restore', 'lock', 'unlock', 'pin', 'unpin']),
+  "reason": zod.string().max(moderateForumReplyBodyReasonMax).optional()
+})
+
+export const moderateForumReplyResponseIdMultipleOf = 1;
+
+export const moderateForumReplyResponseThreadIdMultipleOf = 1;
+
+
+
+export const ModerateForumReplyResponse = zod.object({
+  "id": zod.number().multipleOf(moderateForumReplyResponseIdMultipleOf),
+  "threadId": zod.number().multipleOf(moderateForumReplyResponseThreadIdMultipleOf),
+  "content": zod.string(),
+  "author": zod.object({
+  "userId": zod.string(),
+  "displayName": zod.string(),
+  "badge": zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "isDefault": zod.boolean(),
+  "isSelectable": zod.boolean()
+})
+}),
+  "canEdit": zod.boolean(),
+  "canRemove": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
  * @summary Get aggregate stars and this browser's star state
  */
 export const getGameSocialStatsQueryVoterIdMax = 120;

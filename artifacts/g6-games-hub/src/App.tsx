@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowUpRight, ChevronDown, ChevronRight, ExternalLink, Menu, Plus, Save, Share2, Trash2, X } from 'lucide-react';
+import { ArrowUpRight, ChevronDown, ChevronRight, ExternalLink, Flag, Lock, Menu, Pin, Plus, Save, Share2, Trash2, X } from 'lucide-react';
 import { Link, Route, Switch, useLocation, useParams, Router as WouterRouter } from 'wouter';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { getGetGameFeedbackQueryKey, getGetGameSocialStatsQueryKey, getGetMemberRolesQueryKey, getGetMyMemberProfileQueryKey, useGetAuthProviders, useGetGameFeedback, useGetGameSocialStats, useGetMemberBadges, useGetMemberRoles, useGetMyMemberProfile, useReviewGameFeedback, useSubmitGameFeedback, useToggleGameStar, useUpdateMemberRole, useUpdateMyMemberProfile, type AuthProvider, type GameSocialStats, type MemberProfileInput, type MemberRoleInputRole } from '@workspace/api-client-react';
+import { getGetGameFeedbackQueryKey, getGetForumCategoriesQueryKey, getGetForumThreadDetailQueryKey, getGetGameSocialStatsQueryKey, getGetMemberRolesQueryKey, getGetMyMemberProfileQueryKey, getListForumCategoryThreadsQueryKey, getListForumModerationReportsQueryKey, useCreateForumReply, useCreateForumReport, useCreateForumThread, useDeleteForumReply, useDeleteForumThread, useGetAuthProviders, useGetForumCategories, useGetForumThreadDetail, useGetGameFeedback, useGetGameSocialStats, useGetMemberBadges, useGetMemberRoles, useGetMyMemberProfile, useListForumCategoryThreads, useListForumModerationReports, useModerateForumReply, useModerateForumThread, useResolveForumReport, useReviewGameFeedback, useSubmitGameFeedback, useToggleGameStar, useUpdateForumReply, useUpdateForumThread, useUpdateMemberRole, useUpdateMyMemberProfile, type AuthProvider, type ForumReply, type ForumThread, type GameSocialStats, type MemberProfileInput, type MemberRoleInputRole } from '@workspace/api-client-react';
 import { useAuth } from '@workspace/replit-auth-web';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
@@ -161,6 +161,7 @@ function Navigation() {
         <nav id="primary-navigation" className={`nav-links ${open ? 'open' : ''}`} aria-label="Primary navigation">
           <Link ref={firstNavLinkRef} href="/" className={`nav-link ${location === '/' ? 'active' : ''}`} aria-current={location === '/' ? 'page' : undefined} onClick={() => closeMenu()}>GSix home</Link>
           <Link href="/games" className={`nav-link ${location.startsWith('/games') ? 'active' : ''}`} aria-current={location.startsWith('/games') ? 'page' : undefined} onClick={() => closeMenu()}>GSix games</Link>
+           <Link href="/forum" className={`nav-link ${location.startsWith('/forum') ? 'active' : ''}`} aria-current={location.startsWith('/forum') ? 'page' : undefined} onClick={() => closeMenu()}>Community forum</Link>
           <Link href="/hire" className={`nav-link ${location === '/hire' ? 'active' : ''}`} aria-current={location === '/hire' ? 'page' : undefined} onClick={() => closeMenu()}>Build with us</Link>
           <Link href="/profile" className={`nav-link ${location === '/profile' ? 'active' : ''}`} aria-current={location === '/profile' ? 'page' : undefined} onClick={() => closeMenu()}>{auth.isAuthenticated ? 'Member profile' : 'Join G6'}</Link>
         </nav>
@@ -198,6 +199,8 @@ function Shell({ children }: { children: React.ReactNode }) {
           ? "Build with GSix — Discover What's Grand"
           : location === '/admin'
             ? "GSix Control Room — Discover What's Grand"
+            : location === '/forum' || location.startsWith('/forum/')
+              ? "GSix Community Forum — Discover What's Grand"
             : location === '/profile'
               ? "GSix Member Profile — Discover What's Grand"
             : "GSix — Discover What's Grand";
@@ -495,6 +498,116 @@ function Profile() {
   </main></Shell>;
 }
 
+function forumDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).format(date);
+}
+
+function forumError(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
+
+function BadgeChip({ author }: { author: { displayName: string; badge: { name: string } } }) {
+  return <span className="forum-author"><span className="mini-badge" aria-hidden="true">{author.badge.name.split(' ').map((word) => word[0]).join('')}</span><span><strong>{author.displayName}</strong><small>{author.badge.name}</small></span></span>;
+}
+
+function ReportForm({ targetType, targetId }: { targetType: 'thread' | 'reply'; targetId: number }) {
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState('');
+  const report = useCreateForumReport();
+  if (!open) return <button type="button" className="text-button forum-report-trigger" onClick={() => setOpen(true)}><Flag size={13} /> Report</button>;
+  return <form className="forum-report-form" onSubmit={(event) => {
+    event.preventDefault();
+    report.mutate({ data: { targetType, targetId, reason: reason.trim() } }, {
+      onSuccess: () => { setReason(''); setOpen(false); },
+    });
+  }}>
+    <label htmlFor={`report-${targetType}-${targetId}`}>Why should a moderator review this?</label>
+    <textarea id={`report-${targetType}-${targetId}`} value={reason} onChange={(event) => setReason(event.target.value)} minLength={10} maxLength={500} required placeholder="At least 10 characters" />
+    <div className="forum-inline-actions"><button type="button" className="text-button" onClick={() => setOpen(false)}>Cancel</button><button type="submit" className="button-secondary" disabled={report.isPending}>{report.isPending ? 'Sending…' : 'Send report'}</button></div>
+    {report.isError && <p className="social-status error" role="alert">{forumError(report.error, 'The report could not be sent.')}</p>}
+  </form>;
+}
+
+function ReplyCard({ reply, threadId, onChanged }: { reply: ForumReply; threadId: number; onChanged: () => void }) {
+  const [editing, setEditing] = useState(false);
+  const [content, setContent] = useState(reply.content);
+  const update = useUpdateForumReply({ mutation: { onSuccess: () => { setEditing(false); onChanged(); } } });
+  const remove = useDeleteForumReply({ mutation: { onSuccess: onChanged } });
+  return <article className="forum-reply">
+    <div className="forum-post-meta"><BadgeChip author={reply.author} /><time dateTime={reply.createdAt}>{forumDate(reply.createdAt)}</time></div>
+    {editing ? <form className="forum-edit-form" onSubmit={(event) => { event.preventDefault(); update.mutate({ id: reply.id, data: { content: content.trim() } }); }}><textarea value={content} onChange={(event) => setContent(event.target.value)} minLength={2} maxLength={3000} required /><div className="forum-inline-actions"><button type="button" className="text-button" onClick={() => { setEditing(false); setContent(reply.content); }}>Cancel</button><button className="button-secondary" type="submit" disabled={update.isPending}>{update.isPending ? 'Saving…' : 'Save reply'}</button></div>{update.isError && <p className="social-status error" role="alert">The reply could not be saved.</p>}</form> : <p className="forum-post-content">{reply.content}</p>}
+    <div className="forum-post-footer">{reply.canEdit && <button type="button" className="text-button" onClick={() => setEditing(true)}>Edit</button>}{reply.canRemove && <button type="button" className="text-button danger-link" disabled={remove.isPending} onClick={() => { if (window.confirm('Remove this reply?')) remove.mutate({ id: reply.id }); }}>Remove</button>}<ReportForm targetType="reply" targetId={reply.id} /></div>
+  </article>;
+}
+
+function ThreadComposer({ categorySlug, onCreated }: { categorySlug: string; onCreated: (id: number) => void }) {
+  const auth = useAuth();
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const create = useCreateForumThread({ mutation: { onSuccess: (data) => { setTitle(''); setContent(''); onCreated(data.thread.id); } } });
+  if (!auth.isAuthenticated) return <section className="forum-composer forum-sign-in"><div><span className="eyebrow">Member channel</span><h2>Have a signal to add?</h2><p>Sign in to start a thread with your public display name and selected Lok badge.</p></div><button className="button-secondary" type="button" onClick={() => auth.login()}>Sign in to post <ArrowUpRight size={14} /></button></section>;
+  return <section className="forum-composer"><div><span className="eyebrow">Open a new signal</span><h2>Start a thread.</h2><p>Keep it useful, kind, and specific. Posts are public once sent.</p></div><form className="forum-compose-form" onSubmit={(event) => { event.preventDefault(); create.mutate({ data: { categorySlug, title: title.trim(), content: content.trim() } }); }}><input value={title} onChange={(event) => setTitle(event.target.value)} minLength={4} maxLength={120} required placeholder="Thread title" aria-label="Thread title" /><textarea value={content} onChange={(event) => setContent(event.target.value)} minLength={10} maxLength={5000} required placeholder="What do you want to put into the room?" aria-label="Thread content" /><div className="forum-compose-footer"><span>{content.length} / 5000</span><button className="button-primary" type="submit" disabled={create.isPending}>{create.isPending ? 'Posting…' : 'Publish thread'} <ArrowUpRight size={14} /></button></div>{create.isError && <p className="social-status error" role="alert">{forumError(create.error, 'The thread could not be published.')}</p>}</form></section>;
+}
+
+function ForumModerationPanel({ threadId, isLocked, isPinned, onChanged }: { threadId: number; isLocked: boolean; isPinned: boolean; onChanged: () => void }) {
+  const auth = useAuth();
+  const allowed = auth.role === 'moderator' || auth.role === 'admin' || auth.role === 'owner';
+  const moderate = useModerateForumThread({ mutation: { onSuccess: onChanged } });
+  if (!allowed) return null;
+  const act = (action: 'hide' | 'remove' | 'restore' | 'lock' | 'unlock' | 'pin' | 'unpin') => moderate.mutate({ id: threadId, data: { action } });
+  return <div className="forum-moderation-tools"><span className="eyebrow">Moderator tools</span><div className="forum-inline-actions"><button className="button-secondary" type="button" disabled={moderate.isPending} onClick={() => act(isLocked ? 'unlock' : 'lock')}><Lock size={13} /> {isLocked ? 'Unlock' : 'Lock'}</button><button className="button-secondary" type="button" disabled={moderate.isPending} onClick={() => act(isPinned ? 'unpin' : 'pin')}><Pin size={13} /> {isPinned ? 'Unpin' : 'Pin'}</button><button className="button-secondary danger-button" type="button" disabled={moderate.isPending} onClick={() => act('hide')}>Hide thread</button><button className="button-secondary danger-button" type="button" disabled={moderate.isPending} onClick={() => act('remove')}>Remove thread</button></div>{moderate.isError && <p className="social-status error" role="alert">That moderation action could not be saved.</p>}</div>;
+}
+
+function ForumModerationQueue() {
+  const auth = useAuth();
+  const allowed = auth.role === 'moderator' || auth.role === 'admin' || auth.role === 'owner';
+  const reports = useListForumModerationReports({ page: 1, pageSize: 20 }, { query: { enabled: allowed, queryKey: getListForumModerationReportsQueryKey({ page: 1, pageSize: 20 }) } });
+  const resolve = useResolveForumReport({ mutation: { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListForumModerationReportsQueryKey({ page: 1, pageSize: 20 }) }) } });
+  if (!allowed) return null;
+  if (reports.isLoading) return <section className="forum-moderation-queue info-panel"><span className="eyebrow">Moderator queue</span><h2>Loading reports…</h2></section>;
+  if (reports.isError) return <section className="forum-moderation-queue info-panel" role="alert"><span className="eyebrow">Moderator queue</span><h2>Queue unavailable.</h2><p>Reports could not be loaded.</p><button type="button" className="button-secondary" onClick={() => reports.refetch()}>Retry queue</button></section>;
+  const items = reports.data?.items ?? [];
+  return <section className="forum-moderation-queue info-panel"><div className="forum-section-heading"><div><span className="eyebrow">Moderator queue</span><h2>Keep the room clear.</h2></div><span className="status-pill status-reviewed">{items.filter((item) => item.status === 'pending').length} pending</span></div>{items.length === 0 ? <p className="locked-note">No reports waiting. The room is quiet.</p> : <div className="forum-report-list">{items.map((item) => <div className="forum-report-row" key={item.id}><div><strong>{item.targetType} #{item.targetId}</strong><p>{item.reason}</p><small>Reported by {item.reporter.displayName} · {forumDate(item.createdAt)}</small></div>{item.status === 'pending' ? <div className="forum-inline-actions"><button type="button" className="text-button" disabled={resolve.isPending} onClick={() => resolve.mutate({ id: item.id, data: { status: 'resolved' } })}>Resolve</button><button type="button" className="text-button" disabled={resolve.isPending} onClick={() => resolve.mutate({ id: item.id, data: { status: 'dismissed' } })}>Dismiss</button></div> : <span className="status-pill status-locked">{item.status}</span>}</div>)}</div>}</section>;
+}
+
+function Forum() {
+  const [, setLocation] = useLocation();
+  const [categorySlug, setCategorySlug] = useState('game-room');
+  const [page, setPage] = useState(1);
+  const categories = useGetForumCategories();
+  const categoryList = categories.data ?? [];
+  const threads = useListForumCategoryThreads(categorySlug, { page, pageSize: 12 });
+  useEffect(() => { if (categoryList[0] && !categoryList.some((category) => category.slug === categorySlug)) setCategorySlug(categoryList[0].slug); }, [categoryList, categorySlug]);
+  const selectedCategory = categoryList.find((category) => category.slug === categorySlug);
+  const chooseCategory = (slug: string) => { setCategorySlug(slug); setPage(1); };
+  return <Shell><main id="main-content" className="forum-shell container-g6">
+    <section className="forum-heading"><div><span className="eyebrow">GSix / Community signal</span><h1>THE<br /><span className="text-aqua">FORUM.</span></h1><p>A public room for game talk, field notes, and the good kind of internet rabbit hole. Browse freely; sign in when you want to add your voice.</p></div><div className="forum-heading-mark" aria-hidden="true">/ /<br />OPEN<br />CHANNEL</div></section>
+    {categories.isLoading ? <div className="forum-loading"><span className="skeleton-line" /><span className="skeleton-line" /><span className="skeleton-line short" /></div> : categories.isError ? <div className="auth-state-card denied forum-state-card" role="alert"><span className="eyebrow">Community signal</span><h2>Categories are offline.</h2><p className="locked-note">The forum could not connect. Try again in a moment.</p><button type="button" className="button-secondary" onClick={() => categories.refetch()}>Retry connection</button></div> : <><div className="forum-categories" role="tablist" aria-label="Forum categories">{categoryList.map((category) => <button type="button" role="tab" aria-selected={category.slug === categorySlug} className={`forum-category ${category.slug === categorySlug ? 'active' : ''}`} onClick={() => chooseCategory(category.slug)} key={category.slug}><strong>{category.name}</strong><span>{category.threadCount} {category.threadCount === 1 ? 'thread' : 'threads'}</span><small>{category.description}</small></button>)}</div><section className="forum-thread-section"><div className="forum-section-heading"><div><span className="eyebrow">{selectedCategory?.name ?? 'Open channel'}</span><h2>Recent transmissions.</h2></div><span className="locked-note">{threads.data?.pagination.total ?? 0} public threads</span></div>{threads.isLoading ? <div className="forum-thread-list"><div className="forum-thread-skeleton" /><div className="forum-thread-skeleton" /><div className="forum-thread-skeleton" /></div> : threads.isError ? <div className="forum-empty" role="alert"><strong>That channel went quiet.</strong><p>We could not load its threads.</p><button type="button" className="button-secondary" onClick={() => threads.refetch()}>Retry channel</button></div> : !threads.data?.items.length ? <div className="forum-empty"><span className="empty-mark" aria-hidden="true">—</span><strong>No threads here yet.</strong><p>Be the first person to put a signal into this room.</p></div> : <div className="forum-thread-list">{threads.data.items.map((thread) => <Link href={`/forum/thread/${thread.id}`} className="forum-thread-row" key={thread.id}><div className="forum-thread-row-main"><div className="forum-thread-flags">{thread.isPinned && <span className="status-pill status-reviewed"><Pin size={11} /> Pinned</span>}{thread.isLocked && <span className="status-pill status-locked"><Lock size={11} /> Locked</span>}</div><h3>{thread.title}</h3><p>{thread.excerpt}</p><BadgeChip author={thread.author} /></div><div className="forum-thread-stats"><strong>{thread.replyCount}</strong><span>replies</span><small>{forumDate(thread.lastActivityAt)}</small><ChevronRight size={16} aria-hidden="true" /></div></Link>)}</div>}{threads.data && threads.data.pagination.totalPages > 1 && <div className="forum-pagination"><button className="button-secondary" type="button" disabled={page <= 1} onClick={() => setPage((current) => current - 1)}>Previous</button><span>Page {page} / {threads.data.pagination.totalPages}</span><button className="button-secondary" type="button" disabled={page >= threads.data.pagination.totalPages} onClick={() => setPage((current) => current + 1)}>Next</button></div>}</section><ThreadComposer categorySlug={categorySlug} onCreated={(id) => setLocation(`/forum/thread/${id}`)} /><ForumModerationQueue /></>}
+  </main></Shell>;
+}
+
+function ForumThreadPage() {
+  const params = useParams<{ id: string }>();
+  const [, setLocation] = useLocation();
+  const auth = useAuth();
+  const threadId = Number(params.id);
+  const [editing, setEditing] = useState(false);
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const query = useGetForumThreadDetail(threadId, { replyPage: 1, pageSize: 20 });
+  const reply = useCreateForumReply({ mutation: { onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetForumThreadDetailQueryKey(threadId, { replyPage: 1, pageSize: 20 }) }) } });
+  const update = useUpdateForumThread({ mutation: { onSuccess: () => { setEditing(false); queryClient.invalidateQueries({ queryKey: getGetForumThreadDetailQueryKey(threadId, { replyPage: 1, pageSize: 20 }) }); } } });
+  const remove = useDeleteForumThread({ mutation: { onSuccess: () => setLocation('/forum') } });
+  const [replyContent, setReplyContent] = useState('');
+  if (query.isLoading) return <Shell><main id="main-content" className="forum-shell container-g6"><div className="forum-loading"><span className="skeleton-line" /><span className="skeleton-line" /><span className="skeleton-line short" /></div></main></Shell>;
+  if (query.isError || !query.data) return <Shell><main id="main-content" className="forum-shell container-g6"><div className="auth-state-card denied forum-state-card" role="alert"><span className="eyebrow">Community signal</span><h2>Thread not found.</h2><p className="locked-note">This thread may have been removed or the address may be mistyped.</p><Link className="button-secondary" href="/forum">Return to the forum <ArrowUpRight size={14} /></Link></div></main></Shell>;
+  const thread = query.data.thread;
+  const submitReply = (event: React.FormEvent) => { event.preventDefault(); reply.mutate({ id: thread.id, data: { content: replyContent.trim() } }, { onSuccess: () => setReplyContent('') }); };
+  return <Shell><main id="main-content" className="forum-shell container-g6"><Link href="/forum" className="forum-back">← Back to community</Link><article className="forum-thread-detail"><div className="forum-detail-heading"><div><span className="eyebrow">{thread.categorySlug} / {thread.isPinned ? 'pinned' : 'transmission'}</span>{editing ? <input className="forum-edit-title" value={title || thread.title} onChange={(event) => setTitle(event.target.value)} minLength={4} maxLength={120} /> : <h1>{thread.title}</h1>}<div className="forum-post-meta"><BadgeChip author={thread.author} /><time dateTime={thread.createdAt}>{forumDate(thread.createdAt)}</time></div></div><div className="forum-thread-flags">{thread.isLocked && <span className="status-pill status-locked"><Lock size={11} /> Locked</span>}</div></div>{editing ? <form className="forum-edit-form forum-thread-editor" onSubmit={(event) => { event.preventDefault(); update.mutate({ id: thread.id, data: { title: (title || thread.title).trim(), content: (content || thread.content).trim() } }); }}><textarea value={content || thread.content} onChange={(event) => setContent(event.target.value)} minLength={10} maxLength={5000} required /><div className="forum-inline-actions"><button type="button" className="text-button" onClick={() => { setEditing(false); setTitle(''); setContent(''); }}>Cancel</button><button type="submit" className="button-primary" disabled={update.isPending}>{update.isPending ? 'Saving…' : 'Save thread'}</button></div></form> : <p className="forum-thread-content">{thread.content}</p>}<div className="forum-post-footer">{thread.canEdit && <button type="button" className="text-button" onClick={() => { setEditing(true); setTitle(thread.title); setContent(thread.content); }}>Edit</button>}{thread.canRemove && <button type="button" className="text-button danger-link" disabled={remove.isPending} onClick={() => { if (window.confirm('Remove this thread?')) remove.mutate({ id: thread.id }); }}>Remove</button>}<ReportForm targetType="thread" targetId={thread.id} /></div></article><ForumModerationPanel threadId={thread.id} isLocked={thread.isLocked} isPinned={thread.isPinned} onChanged={() => queryClient.invalidateQueries({ queryKey: getGetForumThreadDetailQueryKey(threadId, { replyPage: 1, pageSize: 20 }) })} /><section className="forum-replies-section"><div className="forum-section-heading"><div><span className="eyebrow">Community responses</span><h2>{query.data.pagination.total} replies.</h2></div></div>{query.data.replies.map((item) => <ReplyCard reply={item} threadId={thread.id} onChanged={() => queryClient.invalidateQueries({ queryKey: getGetForumThreadDetailQueryKey(threadId, { replyPage: 1, pageSize: 20 }) })} key={item.id} />)}{!query.data.replies.length && <div className="forum-empty small"><strong>No replies yet.</strong><p>The first response opens the thread.</p></div>}</section>{auth.isAuthenticated ? thread.isLocked ? <div className="forum-sign-in forum-locked-reply"><Lock size={16} /><p>This thread is locked by moderation.</p></div> : <form className="forum-reply-form" onSubmit={submitReply}><span className="eyebrow">Add your signal</span><textarea value={replyContent} onChange={(event) => setReplyContent(event.target.value)} minLength={2} maxLength={3000} required placeholder="Write a public reply…" aria-label="Public reply" /><div className="forum-compose-footer"><span>{replyContent.length} / 3000</span><button className="button-primary" type="submit" disabled={reply.isPending}>{reply.isPending ? 'Sending…' : 'Send reply'} <ArrowUpRight size={14} /></button></div>{reply.isError && <p className="social-status error" role="alert">{forumError(reply.error, 'The reply could not be sent.')}</p>}</form> : <div className="forum-sign-in forum-reply-sign-in"><p>Sign in to reply with your public badge.</p><button className="button-secondary" type="button" onClick={() => auth.login()}>Sign in to reply <ArrowUpRight size={14} /></button></div>}</main></Shell>;
+}
+
 type Track = { id: number; title: string; artist: string; url: string };
 const starterTracks: Track[] = [{ id: 1, title: 'After the lights', artist: 'GSix / field recording', url: 'https://cdn.pixabay.com/audio/2022/10/25/audio_9465c2c9c2.mp3' }, { id: 2, title: 'Local:200', artist: 'GSix / chapter zero', url: 'https://cdn.pixabay.com/audio/2022/03/15/audio_c8c8a734c7.mp3' }];
 
@@ -587,7 +700,7 @@ function Admin() {
 }
 
 function Router() {
-  return <ErrorBoundary><Switch><Route path="/" component={Home} /><Route path={GAMES_DIRECTORY_PATH} component={Games} /><Route path={GAME_DETAIL_ROUTE} component={GameDetail} /><Route path="/hire" component={Hire} /><Route path="/profile" component={Profile} /><Route path="/admin" component={Admin} /><Route component={NotFound} /></Switch></ErrorBoundary>;
+  return <ErrorBoundary><Switch><Route path="/" component={Home} /><Route path={GAMES_DIRECTORY_PATH} component={Games} /><Route path={GAME_DETAIL_ROUTE} component={GameDetail} /><Route path="/forum" component={Forum} /><Route path="/forum/thread/:id" component={ForumThreadPage} /><Route path="/hire" component={Hire} /><Route path="/profile" component={Profile} /><Route path="/admin" component={Admin} /><Route component={NotFound} /></Switch></ErrorBoundary>;
 }
 
 function App() {

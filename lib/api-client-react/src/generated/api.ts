@@ -28,11 +28,28 @@ import type {
   FeedbackNote,
   FeedbackReceipt,
   FeedbackReviewInput,
+  ForumCategory,
+  ForumModerationInput,
+  ForumModerationPage,
+  ForumModerationReport,
+  ForumReply,
+  ForumReplyInput,
+  ForumReplyUpdate,
+  ForumReportInput,
+  ForumReportReceipt,
+  ForumReportUpdate,
+  ForumThreadDetail,
+  ForumThreadInput,
+  ForumThreadPage,
+  ForumThreadUpdate,
   GameFeedbackInput,
   GameSocialStats,
   GameStarInput,
+  GetForumThreadDetailParams,
   GetGameSocialStatsParams,
   HealthStatus,
+  ListForumCategoryThreadsParams,
+  ListForumModerationReportsParams,
   MemberProfile,
   MemberProfileInput,
   MemberPublicProfile,
@@ -979,6 +996,1061 @@ export const useUpdateMemberRole = <TError = ErrorType<Error>,
         TContext
       > => {
       return useMutation(getUpdateMemberRoleMutationOptions(options));
+    }
+
+export const getGetForumCategoriesUrl = () => {
+
+
+
+
+  return `/api/forum/categories`
+}
+
+/**
+ * @summary List forum categories
+ */
+export const getForumCategories = async ( options?: Parameters<typeof customFetch>[1]): Promise<ForumCategory[]> => {
+
+  return customFetch<ForumCategory[]>(getGetForumCategoriesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetForumCategoriesQueryKey = () => {
+    return [
+    `/api/forum/categories`
+    ] as const;
+    }
+
+
+export const getGetForumCategoriesQueryOptions = <TData = Awaited<ReturnType<typeof getForumCategories>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getForumCategories>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetForumCategoriesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getForumCategories>>> = ({ signal }) => getForumCategories({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getForumCategories>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetForumCategoriesQueryResult = NonNullable<Awaited<ReturnType<typeof getForumCategories>>>
+export type GetForumCategoriesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List forum categories
+ */
+
+export function useGetForumCategories<TData = Awaited<ReturnType<typeof getForumCategories>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getForumCategories>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetForumCategoriesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListForumCategoryThreadsUrl = (slug: string,
+    params?: ListForumCategoryThreadsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/forum/categories/${slug}/threads?${stringifiedParams}` : `/api/forum/categories/${slug}/threads`
+}
+
+/**
+ * @summary List paginated threads in a forum category
+ */
+export const listForumCategoryThreads = async (slug: string,
+    params?: ListForumCategoryThreadsParams, options?: Parameters<typeof customFetch>[1]): Promise<ForumThreadPage> => {
+
+  return customFetch<ForumThreadPage>(getListForumCategoryThreadsUrl(slug,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListForumCategoryThreadsQueryKey = (slug: string,
+    params?: ListForumCategoryThreadsParams,) => {
+    return [
+    `/api/forum/categories/${slug}/threads`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListForumCategoryThreadsQueryOptions = <TData = Awaited<ReturnType<typeof listForumCategoryThreads>>, TError = ErrorType<Error>>(slug: string,
+    params?: ListForumCategoryThreadsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listForumCategoryThreads>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListForumCategoryThreadsQueryKey(slug,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listForumCategoryThreads>>> = ({ signal }) => listForumCategoryThreads(slug,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: slug !== null && slug !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listForumCategoryThreads>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListForumCategoryThreadsQueryResult = NonNullable<Awaited<ReturnType<typeof listForumCategoryThreads>>>
+export type ListForumCategoryThreadsQueryError = ErrorType<Error>
+
+
+/**
+ * @summary List paginated threads in a forum category
+ */
+
+export function useListForumCategoryThreads<TData = Awaited<ReturnType<typeof listForumCategoryThreads>>, TError = ErrorType<Error>>(
+ slug: string,
+    params?: ListForumCategoryThreadsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listForumCategoryThreads>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListForumCategoryThreadsQueryOptions(slug,params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetForumThreadDetailUrl = (id: number,
+    params?: GetForumThreadDetailParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/forum/thread/${id}?${stringifiedParams}` : `/api/forum/thread/${id}`
+}
+
+/**
+ * @summary Get a public forum thread and paginated replies
+ */
+export const getForumThreadDetail = async (id: number,
+    params?: GetForumThreadDetailParams, options?: Parameters<typeof customFetch>[1]): Promise<ForumThreadDetail> => {
+
+  return customFetch<ForumThreadDetail>(getGetForumThreadDetailUrl(id,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetForumThreadDetailQueryKey = (id: number,
+    params?: GetForumThreadDetailParams,) => {
+    return [
+    `/api/forum/thread/${id}`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetForumThreadDetailQueryOptions = <TData = Awaited<ReturnType<typeof getForumThreadDetail>>, TError = ErrorType<Error>>(id: number,
+    params?: GetForumThreadDetailParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getForumThreadDetail>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetForumThreadDetailQueryKey(id,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getForumThreadDetail>>> = ({ signal }) => getForumThreadDetail(id,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getForumThreadDetail>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetForumThreadDetailQueryResult = NonNullable<Awaited<ReturnType<typeof getForumThreadDetail>>>
+export type GetForumThreadDetailQueryError = ErrorType<Error>
+
+
+/**
+ * @summary Get a public forum thread and paginated replies
+ */
+
+export function useGetForumThreadDetail<TData = Awaited<ReturnType<typeof getForumThreadDetail>>, TError = ErrorType<Error>>(
+ id: number,
+    params?: GetForumThreadDetailParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getForumThreadDetail>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetForumThreadDetailQueryOptions(id,params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateForumThreadUrl = () => {
+
+
+
+
+  return `/api/forum/threads`
+}
+
+/**
+ * @summary Create a forum thread
+ */
+export const createForumThread = async (forumThreadInput: ForumThreadInput, options?: Parameters<typeof customFetch>[1]): Promise<ForumThreadDetail> => {
+
+  return customFetch<ForumThreadDetail>(getCreateForumThreadUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(forumThreadInput)
+  }
+);}
+
+
+
+
+
+export const getCreateForumThreadMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createForumThread>>, TError,{data: BodyType<ForumThreadInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createForumThread>>, TError,{data: BodyType<ForumThreadInput>}, TContext> => {
+
+const mutationKey = ['createForumThread'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createForumThread>>, {data: BodyType<ForumThreadInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createForumThread(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateForumThreadMutationResult = NonNullable<Awaited<ReturnType<typeof createForumThread>>>
+    export type CreateForumThreadMutationBody = BodyType<ForumThreadInput>
+    export type CreateForumThreadMutationError = ErrorType<Error>
+
+    /**
+ * @summary Create a forum thread
+ */
+export const useCreateForumThread = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createForumThread>>, TError,{data: BodyType<ForumThreadInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createForumThread>>,
+        TError,
+        {data: BodyType<ForumThreadInput>},
+        TContext
+      > => {
+      return useMutation(getCreateForumThreadMutationOptions(options));
+    }
+
+export const getCreateForumReplyUrl = (id: number,) => {
+
+
+
+
+  return `/api/forum/threads/${id}/replies`
+}
+
+/**
+ * @summary Reply to a forum thread
+ */
+export const createForumReply = async (id: number,
+    forumReplyInput: ForumReplyInput, options?: Parameters<typeof customFetch>[1]): Promise<ForumReply> => {
+
+  return customFetch<ForumReply>(getCreateForumReplyUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(forumReplyInput)
+  }
+);}
+
+
+
+
+
+export const getCreateForumReplyMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createForumReply>>, TError,{id: number;data: BodyType<ForumReplyInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createForumReply>>, TError,{id: number;data: BodyType<ForumReplyInput>}, TContext> => {
+
+const mutationKey = ['createForumReply'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createForumReply>>, {id: number;data: BodyType<ForumReplyInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  createForumReply(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateForumReplyMutationResult = NonNullable<Awaited<ReturnType<typeof createForumReply>>>
+    export type CreateForumReplyMutationBody = BodyType<ForumReplyInput>
+    export type CreateForumReplyMutationError = ErrorType<Error>
+
+    /**
+ * @summary Reply to a forum thread
+ */
+export const useCreateForumReply = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createForumReply>>, TError,{id: number;data: BodyType<ForumReplyInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createForumReply>>,
+        TError,
+        {id: number;data: BodyType<ForumReplyInput>},
+        TContext
+      > => {
+      return useMutation(getCreateForumReplyMutationOptions(options));
+    }
+
+export const getUpdateForumThreadUrl = (id: number,) => {
+
+
+
+
+  return `/api/forum/threads/${id}`
+}
+
+/**
+ * @summary Edit or remove your forum thread
+ */
+export const updateForumThread = async (id: number,
+    forumThreadUpdate: ForumThreadUpdate, options?: Parameters<typeof customFetch>[1]): Promise<ForumThreadDetail> => {
+
+  return customFetch<ForumThreadDetail>(getUpdateForumThreadUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(forumThreadUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateForumThreadMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateForumThread>>, TError,{id: number;data: BodyType<ForumThreadUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateForumThread>>, TError,{id: number;data: BodyType<ForumThreadUpdate>}, TContext> => {
+
+const mutationKey = ['updateForumThread'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateForumThread>>, {id: number;data: BodyType<ForumThreadUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateForumThread(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateForumThreadMutationResult = NonNullable<Awaited<ReturnType<typeof updateForumThread>>>
+    export type UpdateForumThreadMutationBody = BodyType<ForumThreadUpdate>
+    export type UpdateForumThreadMutationError = ErrorType<Error>
+
+    /**
+ * @summary Edit or remove your forum thread
+ */
+export const useUpdateForumThread = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateForumThread>>, TError,{id: number;data: BodyType<ForumThreadUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateForumThread>>,
+        TError,
+        {id: number;data: BodyType<ForumThreadUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateForumThreadMutationOptions(options));
+    }
+
+export const getDeleteForumThreadUrl = (id: number,) => {
+
+
+
+
+  return `/api/forum/threads/${id}`
+}
+
+/**
+ * @summary Remove your forum thread
+ */
+export const deleteForumThread = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteForumThreadUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteForumThreadMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteForumThread>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteForumThread>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteForumThread'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteForumThread>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteForumThread(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteForumThreadMutationResult = NonNullable<Awaited<ReturnType<typeof deleteForumThread>>>
+
+    export type DeleteForumThreadMutationError = ErrorType<Error>
+
+    /**
+ * @summary Remove your forum thread
+ */
+export const useDeleteForumThread = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteForumThread>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteForumThread>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteForumThreadMutationOptions(options));
+    }
+
+export const getUpdateForumReplyUrl = (id: number,) => {
+
+
+
+
+  return `/api/forum/replies/${id}`
+}
+
+/**
+ * @summary Edit or remove your forum reply
+ */
+export const updateForumReply = async (id: number,
+    forumReplyUpdate: ForumReplyUpdate, options?: Parameters<typeof customFetch>[1]): Promise<ForumReply> => {
+
+  return customFetch<ForumReply>(getUpdateForumReplyUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(forumReplyUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateForumReplyMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateForumReply>>, TError,{id: number;data: BodyType<ForumReplyUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateForumReply>>, TError,{id: number;data: BodyType<ForumReplyUpdate>}, TContext> => {
+
+const mutationKey = ['updateForumReply'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateForumReply>>, {id: number;data: BodyType<ForumReplyUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateForumReply(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateForumReplyMutationResult = NonNullable<Awaited<ReturnType<typeof updateForumReply>>>
+    export type UpdateForumReplyMutationBody = BodyType<ForumReplyUpdate>
+    export type UpdateForumReplyMutationError = ErrorType<Error>
+
+    /**
+ * @summary Edit or remove your forum reply
+ */
+export const useUpdateForumReply = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateForumReply>>, TError,{id: number;data: BodyType<ForumReplyUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateForumReply>>,
+        TError,
+        {id: number;data: BodyType<ForumReplyUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateForumReplyMutationOptions(options));
+    }
+
+export const getDeleteForumReplyUrl = (id: number,) => {
+
+
+
+
+  return `/api/forum/replies/${id}`
+}
+
+/**
+ * @summary Remove your forum reply
+ */
+export const deleteForumReply = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteForumReplyUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteForumReplyMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteForumReply>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteForumReply>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteForumReply'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteForumReply>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteForumReply(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteForumReplyMutationResult = NonNullable<Awaited<ReturnType<typeof deleteForumReply>>>
+
+    export type DeleteForumReplyMutationError = ErrorType<Error>
+
+    /**
+ * @summary Remove your forum reply
+ */
+export const useDeleteForumReply = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteForumReply>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteForumReply>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteForumReplyMutationOptions(options));
+    }
+
+export const getCreateForumReportUrl = () => {
+
+
+
+
+  return `/api/forum/reports`
+}
+
+/**
+ * @summary Report a forum thread or reply
+ */
+export const createForumReport = async (forumReportInput: ForumReportInput, options?: Parameters<typeof customFetch>[1]): Promise<ForumReportReceipt> => {
+
+  return customFetch<ForumReportReceipt>(getCreateForumReportUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(forumReportInput)
+  }
+);}
+
+
+
+
+
+export const getCreateForumReportMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createForumReport>>, TError,{data: BodyType<ForumReportInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createForumReport>>, TError,{data: BodyType<ForumReportInput>}, TContext> => {
+
+const mutationKey = ['createForumReport'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createForumReport>>, {data: BodyType<ForumReportInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createForumReport(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateForumReportMutationResult = NonNullable<Awaited<ReturnType<typeof createForumReport>>>
+    export type CreateForumReportMutationBody = BodyType<ForumReportInput>
+    export type CreateForumReportMutationError = ErrorType<Error>
+
+    /**
+ * @summary Report a forum thread or reply
+ */
+export const useCreateForumReport = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createForumReport>>, TError,{data: BodyType<ForumReportInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createForumReport>>,
+        TError,
+        {data: BodyType<ForumReportInput>},
+        TContext
+      > => {
+      return useMutation(getCreateForumReportMutationOptions(options));
+    }
+
+export const getListForumModerationReportsUrl = (params?: ListForumModerationReportsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/forum/moderation/reports?${stringifiedParams}` : `/api/forum/moderation/reports`
+}
+
+/**
+ * @summary List reports for moderators
+ */
+export const listForumModerationReports = async (params?: ListForumModerationReportsParams, options?: Parameters<typeof customFetch>[1]): Promise<ForumModerationPage> => {
+
+  return customFetch<ForumModerationPage>(getListForumModerationReportsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListForumModerationReportsQueryKey = (params?: ListForumModerationReportsParams,) => {
+    return [
+    `/api/forum/moderation/reports`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListForumModerationReportsQueryOptions = <TData = Awaited<ReturnType<typeof listForumModerationReports>>, TError = ErrorType<Error>>(params?: ListForumModerationReportsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listForumModerationReports>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListForumModerationReportsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listForumModerationReports>>> = ({ signal }) => listForumModerationReports(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listForumModerationReports>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListForumModerationReportsQueryResult = NonNullable<Awaited<ReturnType<typeof listForumModerationReports>>>
+export type ListForumModerationReportsQueryError = ErrorType<Error>
+
+
+/**
+ * @summary List reports for moderators
+ */
+
+export function useListForumModerationReports<TData = Awaited<ReturnType<typeof listForumModerationReports>>, TError = ErrorType<Error>>(
+ params?: ListForumModerationReportsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listForumModerationReports>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListForumModerationReportsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getResolveForumReportUrl = (id: number,) => {
+
+
+
+
+  return `/api/forum/moderation/reports/${id}`
+}
+
+/**
+ * @summary Resolve or dismiss a forum report
+ */
+export const resolveForumReport = async (id: number,
+    forumReportUpdate: ForumReportUpdate, options?: Parameters<typeof customFetch>[1]): Promise<ForumModerationReport> => {
+
+  return customFetch<ForumModerationReport>(getResolveForumReportUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(forumReportUpdate)
+  }
+);}
+
+
+
+
+
+export const getResolveForumReportMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resolveForumReport>>, TError,{id: number;data: BodyType<ForumReportUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof resolveForumReport>>, TError,{id: number;data: BodyType<ForumReportUpdate>}, TContext> => {
+
+const mutationKey = ['resolveForumReport'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof resolveForumReport>>, {id: number;data: BodyType<ForumReportUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  resolveForumReport(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ResolveForumReportMutationResult = NonNullable<Awaited<ReturnType<typeof resolveForumReport>>>
+    export type ResolveForumReportMutationBody = BodyType<ForumReportUpdate>
+    export type ResolveForumReportMutationError = ErrorType<Error>
+
+    /**
+ * @summary Resolve or dismiss a forum report
+ */
+export const useResolveForumReport = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resolveForumReport>>, TError,{id: number;data: BodyType<ForumReportUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof resolveForumReport>>,
+        TError,
+        {id: number;data: BodyType<ForumReportUpdate>},
+        TContext
+      > => {
+      return useMutation(getResolveForumReportMutationOptions(options));
+    }
+
+export const getModerateForumThreadUrl = (id: number,) => {
+
+
+
+
+  return `/api/forum/moderation/threads/${id}`
+}
+
+/**
+ * @summary Moderate a forum thread
+ */
+export const moderateForumThread = async (id: number,
+    forumModerationInput: ForumModerationInput, options?: Parameters<typeof customFetch>[1]): Promise<ForumThreadDetail> => {
+
+  return customFetch<ForumThreadDetail>(getModerateForumThreadUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(forumModerationInput)
+  }
+);}
+
+
+
+
+
+export const getModerateForumThreadMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof moderateForumThread>>, TError,{id: number;data: BodyType<ForumModerationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof moderateForumThread>>, TError,{id: number;data: BodyType<ForumModerationInput>}, TContext> => {
+
+const mutationKey = ['moderateForumThread'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof moderateForumThread>>, {id: number;data: BodyType<ForumModerationInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  moderateForumThread(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ModerateForumThreadMutationResult = NonNullable<Awaited<ReturnType<typeof moderateForumThread>>>
+    export type ModerateForumThreadMutationBody = BodyType<ForumModerationInput>
+    export type ModerateForumThreadMutationError = ErrorType<Error>
+
+    /**
+ * @summary Moderate a forum thread
+ */
+export const useModerateForumThread = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof moderateForumThread>>, TError,{id: number;data: BodyType<ForumModerationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof moderateForumThread>>,
+        TError,
+        {id: number;data: BodyType<ForumModerationInput>},
+        TContext
+      > => {
+      return useMutation(getModerateForumThreadMutationOptions(options));
+    }
+
+export const getModerateForumReplyUrl = (id: number,) => {
+
+
+
+
+  return `/api/forum/moderation/replies/${id}`
+}
+
+/**
+ * @summary Moderate a forum reply
+ */
+export const moderateForumReply = async (id: number,
+    forumModerationInput: ForumModerationInput, options?: Parameters<typeof customFetch>[1]): Promise<ForumReply> => {
+
+  return customFetch<ForumReply>(getModerateForumReplyUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(forumModerationInput)
+  }
+);}
+
+
+
+
+
+export const getModerateForumReplyMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof moderateForumReply>>, TError,{id: number;data: BodyType<ForumModerationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof moderateForumReply>>, TError,{id: number;data: BodyType<ForumModerationInput>}, TContext> => {
+
+const mutationKey = ['moderateForumReply'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof moderateForumReply>>, {id: number;data: BodyType<ForumModerationInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  moderateForumReply(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ModerateForumReplyMutationResult = NonNullable<Awaited<ReturnType<typeof moderateForumReply>>>
+    export type ModerateForumReplyMutationBody = BodyType<ForumModerationInput>
+    export type ModerateForumReplyMutationError = ErrorType<Error>
+
+    /**
+ * @summary Moderate a forum reply
+ */
+export const useModerateForumReply = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof moderateForumReply>>, TError,{id: number;data: BodyType<ForumModerationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof moderateForumReply>>,
+        TError,
+        {id: number;data: BodyType<ForumModerationInput>},
+        TContext
+      > => {
+      return useMutation(getModerateForumReplyMutationOptions(options));
     }
 
 export const getGetGameSocialStatsUrl = (params?: GetGameSocialStatsParams,) => {
