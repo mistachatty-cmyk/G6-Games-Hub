@@ -106,6 +106,17 @@ test.describe('visitor actions', () => {
     await expect(starButton).toBeFocused();
   });
 
+  test('keeps Lok Coding Practice discoverable through the Learning filter', async ({ page }) => {
+    await page.goto('/games');
+
+    await page.getByRole('button', { name: 'Learning' }).click();
+
+    const practiceTile = page.locator('.game-tile.practice');
+    await expect(practiceTile).toHaveCount(1);
+    await expect(practiceTile.getByRole('heading', { name: 'Lok Coding Practice' })).toBeVisible();
+    await expect(practiceTile.getByRole('link', { name: 'Open Lok Coding Practice' }).first()).toHaveAttribute('href', '/games/lok-coding-practice');
+  });
+
   test('exposes labeled hire fields and completes the brief action', async ({ page }) => {
     await page.goto('/hire');
 
