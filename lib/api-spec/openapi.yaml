@@ -18,6 +18,8 @@ tags:
     description: Member profiles, badges, and roles
   - name: forum
     description: Public community forum and moderation
+  - name: leaderboard
+    description: Privacy-safe community participation rankings
 paths:
   /healthz:
     get:
@@ -847,6 +849,80 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /leaderboard:
+    get:
+      operationId: getLeaderboard
+      tags: [leaderboard]
+      summary: Get public community rankings
+      parameters:
+        - name: window
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [weekly, monthly, all-time]
+            default: weekly
+      responses:
+        "200":
+          description: Public community leaderboard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeaderboardResponse"
+  /leaderboard/activity:
+    post:
+      operationId: recordLeaderboardActivity
+      tags: [leaderboard]
+      summary: Record a coarse engaged member activity pulse
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LeaderboardActivityInput"
+      responses:
+        "200":
+          description: Activity pulse recorded within the daily cap
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeaderboardActivityReceipt"
+        "400":
+          description: Invalid activity pulse
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /leaderboard/moderation/diagnostics:
+    get:
+      operationId: getLeaderboardDiagnostics
+      tags: [leaderboard]
+      summary: Get aggregate leaderboard diagnostics for moderators
+      responses:
+        "200":
+          description: Aggregate leaderboard diagnostics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeaderboardDiagnostics"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Moderator access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /games/stats:
     get:
       operationId: getGameSocialStats
@@ -1070,6 +1146,135 @@ components:
           items:
             $ref: "#/components/schemas/AuthProviderOption"
       required: [providers]
+    LeaderboardMetric:
+      type: object
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        value:
+          type: number
+          multipleOf: 1
+        points:
+          type: number
+          multipleOf: 1
+        enabled:
+          type: boolean
+      required: [key, label, value, points, enabled]
+    LeaderboardScoringRule:
+      type: object
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        points:
+          type: number
+          multipleOf: 1
+        dailyCap:
+          type: ["number", "null"]
+          multipleOf: 1
+        enabled:
+          type: boolean
+        description:
+          type: string
+      required: [key, label, points, dailyCap, enabled, description]
+    LeaderboardAuthor:
+      type: object
+      properties:
+        userId:
+          type: string
+        displayName:
+          type: string
+        badge:
+          $ref: "#/components/schemas/Badge"
+      required: [userId, displayName, badge]
+    LeaderboardEntry:
+      allOf:
+        - $ref: "#/components/schemas/LeaderboardAuthor"
+        - type: object
+          properties:
+            rank:
+              type: number
+              multipleOf: 1
+            score:
+              type: number
+              multipleOf: 1
+            metrics:
+              type: array
+              items:
+                $ref: "#/components/schemas/LeaderboardMetric"
+          required: [rank, score, metrics]
+    LeaderboardResponse:
+      type: object
+      properties:
+        window:
+          type: string
+          enum: [weekly, monthly, all-time]
+        generatedAt:
+          type: string
+          format: date-time
+        refreshAfterSeconds:
+          type: number
+          multipleOf: 1
+        scoring:
+          type: array
+          items:
+            $ref: "#/components/schemas/LeaderboardScoringRule"
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/LeaderboardEntry"
+        viewerRank:
+          type: ["number", "null"]
+          multipleOf: 1
+      required: [window, generatedAt, refreshAfterSeconds, scoring, entries, viewerRank]
+    LeaderboardActivityInput:
+      type: object
+      properties:
+        engagedMinutes:
+          type: number
+          minimum: 1
+          maximum: 5
+          multipleOf: 1
+      required: [engagedMinutes]
+      additionalProperties: false
+    LeaderboardActivityReceipt:
+      type: object
+      properties:
+        recorded:
+          type: boolean
+        dailyCapMinutes:
+          type: number
+          multipleOf: 1
+      required: [recorded, dailyCapMinutes]
+    LeaderboardDiagnostics:
+      type: object
+      properties:
+        generatedAt:
+          type: string
+          format: date-time
+        cachedWindows:
+          type: array
+          items:
+            type: string
+            enum: [weekly, monthly, all-time]
+        rankedMembers:
+          type: number
+          multipleOf: 1
+        cappedDailyMinutes:
+          type: number
+          multipleOf: 1
+        futureEventSources:
+          type: array
+          items:
+            type: string
+        anomalies:
+          type: array
+          items:
+            type: string
+      required: [generatedAt, cachedWindows, rankedMembers, cappedDailyMinutes, futureEventSources, anomalies]
     Badge:
       type: object
       properties:

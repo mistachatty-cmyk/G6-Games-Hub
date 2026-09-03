@@ -47,7 +47,12 @@ import type {
   GameStarInput,
   GetForumThreadDetailParams,
   GetGameSocialStatsParams,
+  GetLeaderboardParams,
   HealthStatus,
+  LeaderboardActivityInput,
+  LeaderboardActivityReceipt,
+  LeaderboardDiagnostics,
+  LeaderboardResponse,
   ListForumCategoryThreadsParams,
   ListForumModerationReportsParams,
   MemberProfile,
@@ -2052,6 +2057,238 @@ export const useModerateForumReply = <TError = ErrorType<Error>,
       > => {
       return useMutation(getModerateForumReplyMutationOptions(options));
     }
+
+export const getGetLeaderboardUrl = (params?: GetLeaderboardParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/leaderboard?${stringifiedParams}` : `/api/leaderboard`
+}
+
+/**
+ * @summary Get public community rankings
+ */
+export const getLeaderboard = async (params?: GetLeaderboardParams, options?: Parameters<typeof customFetch>[1]): Promise<LeaderboardResponse> => {
+
+  return customFetch<LeaderboardResponse>(getGetLeaderboardUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetLeaderboardQueryKey = (params?: GetLeaderboardParams,) => {
+    return [
+    `/api/leaderboard`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetLeaderboardQueryOptions = <TData = Awaited<ReturnType<typeof getLeaderboard>>, TError = ErrorType<unknown>>(params?: GetLeaderboardParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetLeaderboardQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLeaderboard>>> = ({ signal }) => getLeaderboard(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLeaderboard>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetLeaderboardQueryResult = NonNullable<Awaited<ReturnType<typeof getLeaderboard>>>
+export type GetLeaderboardQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get public community rankings
+ */
+
+export function useGetLeaderboard<TData = Awaited<ReturnType<typeof getLeaderboard>>, TError = ErrorType<unknown>>(
+ params?: GetLeaderboardParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetLeaderboardQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getRecordLeaderboardActivityUrl = () => {
+
+
+
+
+  return `/api/leaderboard/activity`
+}
+
+/**
+ * @summary Record a coarse engaged member activity pulse
+ */
+export const recordLeaderboardActivity = async (leaderboardActivityInput: LeaderboardActivityInput, options?: Parameters<typeof customFetch>[1]): Promise<LeaderboardActivityReceipt> => {
+
+  return customFetch<LeaderboardActivityReceipt>(getRecordLeaderboardActivityUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(leaderboardActivityInput)
+  }
+);}
+
+
+
+
+
+export const getRecordLeaderboardActivityMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordLeaderboardActivity>>, TError,{data: BodyType<LeaderboardActivityInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof recordLeaderboardActivity>>, TError,{data: BodyType<LeaderboardActivityInput>}, TContext> => {
+
+const mutationKey = ['recordLeaderboardActivity'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordLeaderboardActivity>>, {data: BodyType<LeaderboardActivityInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  recordLeaderboardActivity(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecordLeaderboardActivityMutationResult = NonNullable<Awaited<ReturnType<typeof recordLeaderboardActivity>>>
+    export type RecordLeaderboardActivityMutationBody = BodyType<LeaderboardActivityInput>
+    export type RecordLeaderboardActivityMutationError = ErrorType<Error>
+
+    /**
+ * @summary Record a coarse engaged member activity pulse
+ */
+export const useRecordLeaderboardActivity = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordLeaderboardActivity>>, TError,{data: BodyType<LeaderboardActivityInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof recordLeaderboardActivity>>,
+        TError,
+        {data: BodyType<LeaderboardActivityInput>},
+        TContext
+      > => {
+      return useMutation(getRecordLeaderboardActivityMutationOptions(options));
+    }
+
+export const getGetLeaderboardDiagnosticsUrl = () => {
+
+
+
+
+  return `/api/leaderboard/moderation/diagnostics`
+}
+
+/**
+ * @summary Get aggregate leaderboard diagnostics for moderators
+ */
+export const getLeaderboardDiagnostics = async ( options?: Parameters<typeof customFetch>[1]): Promise<LeaderboardDiagnostics> => {
+
+  return customFetch<LeaderboardDiagnostics>(getGetLeaderboardDiagnosticsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetLeaderboardDiagnosticsQueryKey = () => {
+    return [
+    `/api/leaderboard/moderation/diagnostics`
+    ] as const;
+    }
+
+
+export const getGetLeaderboardDiagnosticsQueryOptions = <TData = Awaited<ReturnType<typeof getLeaderboardDiagnostics>>, TError = ErrorType<Error>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLeaderboardDiagnostics>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetLeaderboardDiagnosticsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLeaderboardDiagnostics>>> = ({ signal }) => getLeaderboardDiagnostics({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLeaderboardDiagnostics>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetLeaderboardDiagnosticsQueryResult = NonNullable<Awaited<ReturnType<typeof getLeaderboardDiagnostics>>>
+export type GetLeaderboardDiagnosticsQueryError = ErrorType<Error>
+
+
+/**
+ * @summary Get aggregate leaderboard diagnostics for moderators
+ */
+
+export function useGetLeaderboardDiagnostics<TData = Awaited<ReturnType<typeof getLeaderboardDiagnostics>>, TError = ErrorType<Error>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLeaderboardDiagnostics>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetLeaderboardDiagnosticsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetGameSocialStatsUrl = (params?: GetGameSocialStatsParams,) => {
   const normalizedParams = new URLSearchParams();

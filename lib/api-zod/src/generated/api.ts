@@ -1003,6 +1003,111 @@ export const ModerateForumReplyResponse = zod.object({
 
 
 /**
+ * @summary Get public community rankings
+ */
+export const getLeaderboardQueryWindowDefault = `weekly`;
+
+export const GetLeaderboardQueryParams = zod.object({
+  "window": zod.enum(['weekly', 'monthly', 'all-time']).default(getLeaderboardQueryWindowDefault)
+})
+
+export const getLeaderboardResponseRefreshAfterSecondsMultipleOf = 1;
+
+export const getLeaderboardResponseScoringItemPointsMultipleOf = 1;
+
+export const getLeaderboardResponseScoringItemDailyCapMultipleOf = 1;
+
+export const getLeaderboardResponseEntriesItemTwoRankMultipleOf = 1;
+
+export const getLeaderboardResponseEntriesItemTwoScoreMultipleOf = 1;
+
+export const getLeaderboardResponseEntriesItemTwoMetricsItemValueMultipleOf = 1;
+
+export const getLeaderboardResponseEntriesItemTwoMetricsItemPointsMultipleOf = 1;
+
+export const getLeaderboardResponseViewerRankMultipleOf = 1;
+
+
+
+export const GetLeaderboardResponse = zod.object({
+  "window": zod.enum(['weekly', 'monthly', 'all-time']),
+  "generatedAt": zod.coerce.date(),
+  "refreshAfterSeconds": zod.number().multipleOf(getLeaderboardResponseRefreshAfterSecondsMultipleOf),
+  "scoring": zod.array(zod.object({
+  "key": zod.string(),
+  "label": zod.string(),
+  "points": zod.number().multipleOf(getLeaderboardResponseScoringItemPointsMultipleOf),
+  "dailyCap": zod.number().multipleOf(getLeaderboardResponseScoringItemDailyCapMultipleOf).nullable(),
+  "enabled": zod.boolean(),
+  "description": zod.string()
+})),
+  "entries": zod.array(zod.object({
+  "userId": zod.string(),
+  "displayName": zod.string(),
+  "badge": zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "isDefault": zod.boolean(),
+  "isSelectable": zod.boolean()
+})
+}).and(zod.object({
+  "rank": zod.number().multipleOf(getLeaderboardResponseEntriesItemTwoRankMultipleOf),
+  "score": zod.number().multipleOf(getLeaderboardResponseEntriesItemTwoScoreMultipleOf),
+  "metrics": zod.array(zod.object({
+  "key": zod.string(),
+  "label": zod.string(),
+  "value": zod.number().multipleOf(getLeaderboardResponseEntriesItemTwoMetricsItemValueMultipleOf),
+  "points": zod.number().multipleOf(getLeaderboardResponseEntriesItemTwoMetricsItemPointsMultipleOf),
+  "enabled": zod.boolean()
+}))
+}))),
+  "viewerRank": zod.number().multipleOf(getLeaderboardResponseViewerRankMultipleOf).nullable()
+})
+
+
+/**
+ * @summary Record a coarse engaged member activity pulse
+ */
+export const recordLeaderboardActivityBodyEngagedMinutesMax = 5;
+export const recordLeaderboardActivityBodyEngagedMinutesMultipleOf = 1;
+
+
+
+export const RecordLeaderboardActivityBody = zod.object({
+  "engagedMinutes": zod.number().min(1).max(recordLeaderboardActivityBodyEngagedMinutesMax).multipleOf(recordLeaderboardActivityBodyEngagedMinutesMultipleOf)
+})
+
+export const recordLeaderboardActivityResponseDailyCapMinutesMultipleOf = 1;
+
+
+
+export const RecordLeaderboardActivityResponse = zod.object({
+  "recorded": zod.boolean(),
+  "dailyCapMinutes": zod.number().multipleOf(recordLeaderboardActivityResponseDailyCapMinutesMultipleOf)
+})
+
+
+/**
+ * @summary Get aggregate leaderboard diagnostics for moderators
+ */
+export const getLeaderboardDiagnosticsResponseRankedMembersMultipleOf = 1;
+
+export const getLeaderboardDiagnosticsResponseCappedDailyMinutesMultipleOf = 1;
+
+
+
+export const GetLeaderboardDiagnosticsResponse = zod.object({
+  "generatedAt": zod.coerce.date(),
+  "cachedWindows": zod.array(zod.enum(['weekly', 'monthly', 'all-time'])),
+  "rankedMembers": zod.number().multipleOf(getLeaderboardDiagnosticsResponseRankedMembersMultipleOf),
+  "cappedDailyMinutes": zod.number().multipleOf(getLeaderboardDiagnosticsResponseCappedDailyMinutesMultipleOf),
+  "futureEventSources": zod.array(zod.string()),
+  "anomalies": zod.array(zod.string())
+})
+
+
+/**
  * @summary Get aggregate stars and this browser's star state
  */
 export const getGameSocialStatsQueryVoterIdMax = 120;

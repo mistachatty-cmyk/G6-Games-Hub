@@ -21,6 +21,7 @@ import {
   REGISTERED_GAME_SLUGS,
 } from "../lib/social";
 import { isGsixOwner } from "../lib/ownership";
+import { recordMemberActivity } from "../lib/leaderboard";
 
 const router: IRouter = Router();
 
@@ -75,8 +76,16 @@ router.post("/games/:slug/star", async (req, res): Promise<void> => {
   if (body.data.starred) {
     await db
       .insert(gameStarsTable)
-      .values({ gameSlug: params.data.slug, voterKey })
-      .onConflictDoNothing();
+      .values({
+        gameSlug: params.data.slug,
+        voterKey,
+        memberUserId: req.isAuthenticated() ? req.user.id : null,
+      })
+      .onConflictDoUpdate({
+        target: [gameStarsTable.gameSlug, gameStarsTable.voterKey],
+        set: { memberUserId: req.isAuthenticated() ? req.user.id : null },
+      });
+    if (req.isAuthenticated()) await recordMemberActivity(req.user.id);
   } else {
     await db
       .delete(gameStarsTable)

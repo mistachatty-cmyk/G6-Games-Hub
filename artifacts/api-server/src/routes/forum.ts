@@ -56,6 +56,7 @@ import {
   rateLimitForumAction,
   approveForumActivity,
 } from "../lib/forum";
+import { recordMemberActivity } from "../lib/leaderboard";
 
 const router: IRouter = Router();
 const REPLY_PAGE_SIZE = 20;
@@ -334,6 +335,7 @@ router.post("/forum/threads", async (req, res): Promise<void> => {
     threadId: created.id,
     isApproved: true,
   });
+  await recordMemberActivity(req.user!.id);
   const result = await threadDetail(created.id, req.user!.id, true, 1, REPLY_PAGE_SIZE);
   res.status(201).json(CreateForumThreadResponse.parse(result));
 });
@@ -370,6 +372,7 @@ router.post("/forum/threads/:id/replies", async (req, res): Promise<void> => {
     replyId: created.id,
     isApproved: true,
   });
+  await recordMemberActivity(req.user!.id);
   const result = await replyResponse(created.id, req.user!.id, true);
   res.status(201).json(CreateForumReplyResponse.parse(result));
 });

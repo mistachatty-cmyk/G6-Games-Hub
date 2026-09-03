@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, ChevronDown, ChevronRight, ExternalLink, Flag, Lock, Menu, Pin, Plus, Save, Share2, Trash2, X } from 'lucide-react';
 import { Link, Route, Switch, useLocation, useParams, Router as WouterRouter } from 'wouter';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { getGetGameFeedbackQueryKey, getGetForumCategoriesQueryKey, getGetForumThreadDetailQueryKey, getGetGameSocialStatsQueryKey, getGetMemberRolesQueryKey, getGetMyMemberProfileQueryKey, getListForumCategoryThreadsQueryKey, getListForumModerationReportsQueryKey, useCreateForumReply, useCreateForumReport, useCreateForumThread, useDeleteForumReply, useDeleteForumThread, useGetAuthProviders, useGetForumCategories, useGetForumThreadDetail, useGetGameFeedback, useGetGameSocialStats, useGetMemberBadges, useGetMemberRoles, useGetMyMemberProfile, useListForumCategoryThreads, useListForumModerationReports, useModerateForumReply, useModerateForumThread, useResolveForumReport, useReviewGameFeedback, useSubmitGameFeedback, useToggleGameStar, useUpdateForumReply, useUpdateForumThread, useUpdateMemberRole, useUpdateMyMemberProfile, type AuthProvider, type ForumReply, type ForumThread, type GameSocialStats, type MemberProfileInput, type MemberRoleInputRole } from '@workspace/api-client-react';
+import { getGetForumThreadDetailQueryKey, getGetGameFeedbackQueryKey, getGetGameSocialStatsQueryKey, getGetLeaderboardQueryKey, getGetMemberRolesQueryKey, getGetMyMemberProfileQueryKey, getListForumModerationReportsQueryKey, useCreateForumReply, useCreateForumReport, useCreateForumThread, useDeleteForumReply, useDeleteForumThread, useGetAuthProviders, useGetForumCategories, useGetForumThreadDetail, useGetGameFeedback, useGetGameSocialStats, useGetLeaderboard, useGetLeaderboardDiagnostics, useGetMemberBadges, useGetMemberRoles, useGetMyMemberProfile, useListForumCategoryThreads, useListForumModerationReports, useModerateForumThread, useRecordLeaderboardActivity, useResolveForumReport, useReviewGameFeedback, useSubmitGameFeedback, useToggleGameStar, useUpdateForumReply, useUpdateForumThread, useUpdateMemberRole, useUpdateMyMemberProfile, type AuthProvider, type ForumReply, type ForumThread, type GameSocialStats, type MemberProfileInput, type MemberRoleInputRole } from '@workspace/api-client-react';
 import { useAuth } from '@workspace/replit-auth-web';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
@@ -162,6 +162,7 @@ function Navigation() {
           <Link ref={firstNavLinkRef} href="/" className={`nav-link ${location === '/' ? 'active' : ''}`} aria-current={location === '/' ? 'page' : undefined} onClick={() => closeMenu()}>GSix home</Link>
           <Link href="/games" className={`nav-link ${location.startsWith('/games') ? 'active' : ''}`} aria-current={location.startsWith('/games') ? 'page' : undefined} onClick={() => closeMenu()}>GSix games</Link>
            <Link href="/forum" className={`nav-link ${location.startsWith('/forum') ? 'active' : ''}`} aria-current={location.startsWith('/forum') ? 'page' : undefined} onClick={() => closeMenu()}>Community forum</Link>
+           <Link href="/leaderboard" className={`nav-link ${location.startsWith('/leaderboard') ? 'active' : ''}`} aria-current={location.startsWith('/leaderboard') ? 'page' : undefined} onClick={() => closeMenu()}>Leaderboard</Link>
           <Link href="/hire" className={`nav-link ${location === '/hire' ? 'active' : ''}`} aria-current={location === '/hire' ? 'page' : undefined} onClick={() => closeMenu()}>Build with us</Link>
           <Link href="/profile" className={`nav-link ${location === '/profile' ? 'active' : ''}`} aria-current={location === '/profile' ? 'page' : undefined} onClick={() => closeMenu()}>{auth.isAuthenticated ? 'Member profile' : 'Join G6'}</Link>
         </nav>
@@ -201,6 +202,8 @@ function Shell({ children }: { children: React.ReactNode }) {
             ? "GSix Control Room — Discover What's Grand"
             : location === '/forum' || location.startsWith('/forum/')
               ? "GSix Community Forum — Discover What's Grand"
+            : location === '/leaderboard'
+              ? "GSix Community Leaderboard — Discover What's Grand"
             : location === '/profile'
               ? "GSix Member Profile — Discover What's Grand"
             : "GSix — Discover What's Grand";
@@ -608,6 +611,59 @@ function ForumThreadPage() {
   return <Shell><main id="main-content" className="forum-shell container-g6"><Link href="/forum" className="forum-back">← Back to community</Link><article className="forum-thread-detail"><div className="forum-detail-heading"><div><span className="eyebrow">{thread.categorySlug} / {thread.isPinned ? 'pinned' : 'transmission'}</span>{editing ? <input className="forum-edit-title" value={title || thread.title} onChange={(event) => setTitle(event.target.value)} minLength={4} maxLength={120} /> : <h1>{thread.title}</h1>}<div className="forum-post-meta"><BadgeChip author={thread.author} /><time dateTime={thread.createdAt}>{forumDate(thread.createdAt)}</time></div></div><div className="forum-thread-flags">{thread.isLocked && <span className="status-pill status-locked"><Lock size={11} /> Locked</span>}</div></div>{editing ? <form className="forum-edit-form forum-thread-editor" onSubmit={(event) => { event.preventDefault(); update.mutate({ id: thread.id, data: { title: (title || thread.title).trim(), content: (content || thread.content).trim() } }); }}><textarea value={content || thread.content} onChange={(event) => setContent(event.target.value)} minLength={10} maxLength={5000} required /><div className="forum-inline-actions"><button type="button" className="text-button" onClick={() => { setEditing(false); setTitle(''); setContent(''); }}>Cancel</button><button type="submit" className="button-primary" disabled={update.isPending}>{update.isPending ? 'Saving…' : 'Save thread'}</button></div></form> : <p className="forum-thread-content">{thread.content}</p>}<div className="forum-post-footer">{thread.canEdit && <button type="button" className="text-button" onClick={() => { setEditing(true); setTitle(thread.title); setContent(thread.content); }}>Edit</button>}{thread.canRemove && <button type="button" className="text-button danger-link" disabled={remove.isPending} onClick={() => { if (window.confirm('Remove this thread?')) remove.mutate({ id: thread.id }); }}>Remove</button>}<ReportForm targetType="thread" targetId={thread.id} /></div></article><ForumModerationPanel threadId={thread.id} isLocked={thread.isLocked} isPinned={thread.isPinned} onChanged={() => queryClient.invalidateQueries({ queryKey: getGetForumThreadDetailQueryKey(threadId, { replyPage: 1, pageSize: 20 }) })} /><section className="forum-replies-section"><div className="forum-section-heading"><div><span className="eyebrow">Community responses</span><h2>{query.data.pagination.total} replies.</h2></div></div>{query.data.replies.map((item) => <ReplyCard reply={item} threadId={thread.id} onChanged={() => queryClient.invalidateQueries({ queryKey: getGetForumThreadDetailQueryKey(threadId, { replyPage: 1, pageSize: 20 }) })} key={item.id} />)}{!query.data.replies.length && <div className="forum-empty small"><strong>No replies yet.</strong><p>The first response opens the thread.</p></div>}</section>{auth.isAuthenticated ? thread.isLocked ? <div className="forum-sign-in forum-locked-reply"><Lock size={16} /><p>This thread is locked by moderation.</p></div> : <form className="forum-reply-form" onSubmit={submitReply}><span className="eyebrow">Add your signal</span><textarea value={replyContent} onChange={(event) => setReplyContent(event.target.value)} minLength={2} maxLength={3000} required placeholder="Write a public reply…" aria-label="Public reply" /><div className="forum-compose-footer"><span>{replyContent.length} / 3000</span><button className="button-primary" type="submit" disabled={reply.isPending}>{reply.isPending ? 'Sending…' : 'Send reply'} <ArrowUpRight size={14} /></button></div>{reply.isError && <p className="social-status error" role="alert">{forumError(reply.error, 'The reply could not be sent.')}</p>}</form> : <div className="forum-sign-in forum-reply-sign-in"><p>Sign in to reply with your public badge.</p><button className="button-secondary" type="button" onClick={() => auth.login()}>Sign in to reply <ArrowUpRight size={14} /></button></div>}</main></Shell>;
 }
 
+const LEADERBOARD_RANGES = [
+  { value: 'weekly', label: 'This week', shortLabel: '7 days' },
+  { value: 'monthly', label: 'This month', shortLabel: '30 days' },
+  { value: 'all-time', label: 'All time', shortLabel: 'All signal' },
+] as const;
+
+function LeaderboardActivityPulse() {
+  const auth = useAuth();
+  const pulse = useRecordLeaderboardActivity();
+  useEffect(() => {
+    if (!auth.isAuthenticated) return;
+    let lastInteraction = Date.now();
+    const markEngaged = () => { lastInteraction = Date.now(); };
+    const sendPulse = () => {
+      if (document.visibilityState !== 'visible' || Date.now() - lastInteraction > 5 * 60 * 1000 || pulse.isPending) return;
+      pulse.mutate({ data: { engagedMinutes: 5 } });
+    };
+    window.addEventListener('pointerdown', markEngaged, { passive: true });
+    window.addEventListener('keydown', markEngaged, { passive: true });
+    document.addEventListener('visibilitychange', markEngaged);
+    const interval = window.setInterval(sendPulse, 5 * 60 * 1000);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener('pointerdown', markEngaged);
+      window.removeEventListener('keydown', markEngaged);
+      document.removeEventListener('visibilitychange', markEngaged);
+    };
+  }, [auth.isAuthenticated]);
+  return null;
+}
+
+function LeaderboardDiagnostics() {
+  const auth = useAuth();
+  const allowed = auth.role === 'moderator' || auth.role === 'admin' || auth.role === 'owner';
+  const diagnostics = useGetLeaderboardDiagnostics({ query: { enabled: allowed, queryKey: ['/api/leaderboard/moderation/diagnostics'] } });
+  if (!allowed || diagnostics.isLoading || diagnostics.isError || !diagnostics.data) return null;
+  return <section className="leaderboard-diagnostics info-panel"><div className="forum-section-heading"><div><span className="eyebrow">Moderator view</span><h2>Aggregate health.</h2></div><span className="status-pill status-reviewed">No raw timelines</span></div><div className="leaderboard-diagnostic-grid"><div><strong>{diagnostics.data.rankedMembers}</strong><span>ranked members</span></div><div><strong>{diagnostics.data.cappedDailyMinutes}</strong><span>capped minutes stored</span></div><div><strong>{diagnostics.data.cachedWindows.length}</strong><span>cached windows</span></div></div><div className="leaderboard-anomalies"><span className="eyebrow">Anomaly summary</span>{diagnostics.data.anomalies.map((anomaly) => <p key={anomaly}>{anomaly}</p>)}</div><p className="locked-note">Only counters and cache health are shown here. Future event sources are reserved, not fabricated.</p></section>;
+}
+
+function Leaderboard() {
+  const auth = useAuth();
+  const [range, setRange] = useState<(typeof LEADERBOARD_RANGES)[number]['value']>('weekly');
+  const leaderboard = useGetLeaderboard({ window: range }, { query: { refetchInterval: 60_000, staleTime: 30_000, queryKey: getGetLeaderboardQueryKey({ window: range }) } });
+  const data = leaderboard.data;
+  return <Shell><main id="main-content" className="leaderboard-shell container-g6">
+    <section className="leaderboard-heading"><div><span className="eyebrow">GSix / Community signal</span><h1>WHO'S<br /><span className="text-aqua">GRAND?</span></h1><p>A transparent celebration of showing up. Scores use approved community participation and coarse, capped signals—not private timelines.</p></div><div className="leaderboard-heading-mark">LOW<br />FREQUENCY<br />/ FAIR PLAY</div></section>
+    <section className="leaderboard-toolbar" aria-label="Leaderboard time range"><div className="leaderboard-tabs" role="tablist" aria-label="Leaderboard time range">{LEADERBOARD_RANGES.map((item) => <button key={item.value} type="button" role="tab" aria-selected={range === item.value} className={range === item.value ? 'active' : ''} onClick={() => setRange(item.value)}>{item.label}<small>{item.shortLabel}</small></button>)}</div><div className="leaderboard-refresh" aria-live="polite">{data ? <>{leaderboard.isFetching ? 'Refreshing' : 'Cached'} · Updated {new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(new Date(data.generatedAt))} · refreshes every {data.refreshAfterSeconds}s</> : 'Ranking signal loading…'}</div></section>
+    {leaderboard.isLoading ? <div className="leaderboard-loading"><span className="skeleton-line" /><span className="skeleton-line" /><span className="skeleton-line short" /></div> : leaderboard.isError ? <div className="auth-state-card denied leaderboard-state-card" role="alert"><span className="eyebrow">Ranking signal</span><h2>Leaderboard offline.</h2><p className="locked-note">We could not load the current ranking. No private activity was exposed.</p><button type="button" className="button-secondary" onClick={() => leaderboard.refetch()}>Retry ranking</button></div> : data && data.entries.length === 0 ? <div className="forum-empty leaderboard-empty"><span className="empty-mark" aria-hidden="true">/ /</span><strong>The first signal is yours.</strong><p>Join the forum, star a game while signed in, or simply return another day to appear here.</p><Link className="button-primary" href="/forum">Enter the forum <ArrowUpRight size={14} /></Link></div> : data && <><div className="leaderboard-context"><div><span className="eyebrow">{data.window === 'all-time' ? 'All signal' : data.window === 'monthly' ? 'Last 30 days' : 'Last 7 days'}</span><h2>Participation, not surveillance.</h2></div>{auth.isAuthenticated && <span className="leaderboard-viewer-rank">{data.viewerRank ? <>Your rank <strong>#{data.viewerRank}</strong></> : 'Your rank appears after you participate'}</span>}</div><div className="leaderboard-list" aria-live="polite">{data.entries.map((entry) => <article className={`leaderboard-entry ${entry.rank <= 3 ? 'podium-entry' : ''}`} key={entry.userId} aria-label={`${entry.displayName}, rank ${entry.rank}, ${entry.score} points`}><div className="leaderboard-rank"><span>#{entry.rank}</span>{entry.rank === 1 && <small>TOP SIGNAL</small>}</div><div className="leaderboard-member"><span className="leaderboard-badge">{entry.badge.name.split(' ').map((word) => word[0]).join('')}</span><div><h3>{entry.displayName}</h3><span>{entry.badge.name}</span></div></div><div className="leaderboard-metrics">{entry.metrics.filter((metric) => metric.enabled && metric.value > 0).slice(0, 3).map((metric) => <span key={metric.key}><strong>{metric.value}</strong> {metric.label}</span>)}{!entry.metrics.some((metric) => metric.enabled && metric.value > 0) && <span>First signal</span>}</div><div className="leaderboard-score"><strong>{entry.score}</strong><span>points</span></div></article>)}</div></>}
+    {data && <section className="leaderboard-explainer"><div><span className="eyebrow">How the signal is earned</span><h2>Useful beats noisy.</h2><p>Moderated or removed content never scores. Ties share a rank and then resolve alphabetically so nobody wins through hidden precision.</p></div><div className="leaderboard-rules">{data.scoring.map((rule) => <div className={`leaderboard-rule ${rule.enabled ? '' : 'disabled'}`} key={rule.key}><div><strong>{rule.label}</strong><span>{rule.description}</span></div><b>{rule.enabled ? `${rule.points} pt` : 'reserved'}</b></div>)}</div></section>}
+    <LeaderboardDiagnostics />
+  </main></Shell>;
+}
+
 type Track = { id: number; title: string; artist: string; url: string };
 const starterTracks: Track[] = [{ id: 1, title: 'After the lights', artist: 'GSix / field recording', url: 'https://cdn.pixabay.com/audio/2022/10/25/audio_9465c2c9c2.mp3' }, { id: 2, title: 'Local:200', artist: 'GSix / chapter zero', url: 'https://cdn.pixabay.com/audio/2022/03/15/audio_c8c8a734c7.mp3' }];
 
@@ -700,11 +756,11 @@ function Admin() {
 }
 
 function Router() {
-  return <ErrorBoundary><Switch><Route path="/" component={Home} /><Route path={GAMES_DIRECTORY_PATH} component={Games} /><Route path={GAME_DETAIL_ROUTE} component={GameDetail} /><Route path="/forum" component={Forum} /><Route path="/forum/thread/:id" component={ForumThreadPage} /><Route path="/hire" component={Hire} /><Route path="/profile" component={Profile} /><Route path="/admin" component={Admin} /><Route component={NotFound} /></Switch></ErrorBoundary>;
+  return <ErrorBoundary><Switch><Route path="/" component={Home} /><Route path={GAMES_DIRECTORY_PATH} component={Games} /><Route path={GAME_DETAIL_ROUTE} component={GameDetail} /><Route path="/forum" component={Forum} /><Route path="/forum/thread/:id" component={ForumThreadPage} /><Route path="/leaderboard" component={Leaderboard} /><Route path="/hire" component={Hire} /><Route path="/profile" component={Profile} /><Route path="/admin" component={Admin} /><Route component={NotFound} /></Switch></ErrorBoundary>;
 }
 
 function App() {
-  return <QueryClientProvider client={queryClient}><TooltipProvider><WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}><Router /></WouterRouter><Toaster /></TooltipProvider></QueryClientProvider>;
+  return <QueryClientProvider client={queryClient}><TooltipProvider><WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}><LeaderboardActivityPulse /><Router /></WouterRouter><Toaster /></TooltipProvider></QueryClientProvider>;
 }
 
 export default App;

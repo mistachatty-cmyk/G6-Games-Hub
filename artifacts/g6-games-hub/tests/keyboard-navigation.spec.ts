@@ -28,11 +28,11 @@ test.describe('keyboard navigation', () => {
 
     const primaryNavigation = page.getByRole('navigation', { name: 'Primary navigation' });
     const navigationLinks = primaryNavigation.getByRole('link');
-    await expect(navigationLinks).toHaveCount(5);
-    for (let index = 0; index < 5; index += 1) {
+    await expect(navigationLinks).toHaveCount(6);
+    for (let index = 0; index < 6; index += 1) {
       await navigationLinks.nth(index).focus();
       await expect(navigationLinks.nth(index)).toBeFocused();
-      await expect(navigationLinks.nth(index)).toHaveAttribute('href', /^(\/|\/games|\/forum|\/hire|\/profile)$/);
+      await expect(navigationLinks.nth(index)).toHaveAttribute('href', /^(\/|\/games|\/forum|\/leaderboard|\/hire|\/profile)$/);
     }
   });
 
@@ -178,6 +178,28 @@ test.describe('visitor actions', () => {
     await expect(page.getByText('No threads here yet.')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Have a signal to add?' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Sign in to post' })).toBeVisible();
+  });
+
+  test('browses the public leaderboard with an accessible empty state', async ({ page }) => {
+    await page.route('**/api/leaderboard?window=weekly', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          window: 'weekly',
+          generatedAt: new Date().toISOString(),
+          refreshAfterSeconds: 60,
+          scoring: [],
+          entries: [],
+          viewerRank: null,
+        }),
+      });
+    });
+    await page.goto('/leaderboard');
+    await expect(page.getByRole('heading', { name: /WHO'S GRAND/ })).toBeVisible();
+    await expect(page.getByRole('tablist', { name: 'Leaderboard time range' })).toBeVisible();
+    await expect(page.getByText('The first signal is yours.')).toBeVisible();
+    await expect(page.getByRole('link', { name: /Enter the forum/ })).toHaveAttribute('href', '/forum');
   });
 });
 

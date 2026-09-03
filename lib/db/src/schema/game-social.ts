@@ -7,11 +7,13 @@ export const gameStarsTable = pgTable(
     id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
     gameSlug: varchar("game_slug", { length: 120 }).notNull(),
     voterKey: varchar("voter_key", { length: 64 }).notNull(),
+    memberUserId: varchar("member_user_id").references(() => usersTable.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
     uniqueIndex("game_stars_game_voter_idx").on(table.gameSlug, table.voterKey),
     index("game_stars_game_slug_idx").on(table.gameSlug),
+    index("game_stars_member_user_id_idx").on(table.memberUserId),
   ],
 );
 

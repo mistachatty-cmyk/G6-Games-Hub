@@ -56,12 +56,92 @@ export interface AuthProviders {
   providers: AuthProviderOption[];
 }
 
+export interface LeaderboardMetric {
+  key: string;
+  label: string;
+  value: number;
+  points: number;
+  enabled: boolean;
+}
+
+export interface LeaderboardScoringRule {
+  key: string;
+  label: string;
+  points: number;
+  /** @nullable */
+  dailyCap: number | null;
+  enabled: boolean;
+  description: string;
+}
+
 export interface Badge {
   slug: string;
   name: string;
   description: string;
   isDefault: boolean;
   isSelectable: boolean;
+}
+
+export interface LeaderboardAuthor {
+  userId: string;
+  displayName: string;
+  badge: Badge;
+}
+
+export type LeaderboardEntry = LeaderboardAuthor & {
+  rank: number;
+  score: number;
+  metrics: LeaderboardMetric[];
+};
+
+export type LeaderboardResponseWindow = typeof LeaderboardResponseWindow[keyof typeof LeaderboardResponseWindow];
+
+
+export const LeaderboardResponseWindow = {
+  weekly: 'weekly',
+  monthly: 'monthly',
+  'all-time': 'all-time',
+} as const;
+
+export interface LeaderboardResponse {
+  window: LeaderboardResponseWindow;
+  generatedAt: string;
+  refreshAfterSeconds: number;
+  scoring: LeaderboardScoringRule[];
+  entries: LeaderboardEntry[];
+  /** @nullable */
+  viewerRank: number | null;
+}
+
+export interface LeaderboardActivityInput {
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  engagedMinutes: number;
+}
+
+export interface LeaderboardActivityReceipt {
+  recorded: boolean;
+  dailyCapMinutes: number;
+}
+
+export type LeaderboardDiagnosticsCachedWindowsItem = typeof LeaderboardDiagnosticsCachedWindowsItem[keyof typeof LeaderboardDiagnosticsCachedWindowsItem];
+
+
+export const LeaderboardDiagnosticsCachedWindowsItem = {
+  weekly: 'weekly',
+  monthly: 'monthly',
+  'all-time': 'all-time',
+} as const;
+
+export interface LeaderboardDiagnostics {
+  generatedAt: string;
+  cachedWindows: LeaderboardDiagnosticsCachedWindowsItem[];
+  rankedMembers: number;
+  cappedDailyMinutes: number;
+  futureEventSources: string[];
+  anomalies: string[];
 }
 
 export interface MemberPublicProfile {
@@ -435,6 +515,19 @@ page?: number;
  */
 pageSize?: number;
 };
+
+export type GetLeaderboardParams = {
+window?: GetLeaderboardWindow;
+};
+
+export type GetLeaderboardWindow = typeof GetLeaderboardWindow[keyof typeof GetLeaderboardWindow];
+
+
+export const GetLeaderboardWindow = {
+  weekly: 'weekly',
+  monthly: 'monthly',
+  'all-time': 'all-time',
+} as const;
 
 export type GetGameSocialStatsParams = {
 /**

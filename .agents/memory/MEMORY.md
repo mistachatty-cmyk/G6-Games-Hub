@@ -1,4 +1,5 @@
 - [Cross-origin game advertising](cross-origin-game-ads.md) — external game pages need their own source/deployment changes; the hub can only place ads around the iframe.
 - [OpenAPI integer compatibility](openapi-zod-integer-compatibility.md) — use numeric schemas with `multipleOf: 1` until the workspace Zod runtime supports generated integer helpers.
+- [API Zod barrel collision](api-zod-barrel-collision.md) — codegen re-adds a conflicting generated-types wildcard; preserve the explicit collision-safe barrel exports after generation.
 - [Playwright service-worker routes](playwright-service-worker-routes.md) — block service workers when browser tests must stub document navigations such as auth logout.
 - [Member identity continuity](member-identity-continuity.md) — provider identities map to an internal member while legacy subject IDs remain session-compatible.

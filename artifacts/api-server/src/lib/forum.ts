@@ -1,6 +1,6 @@
 import type { AuthUser } from "@workspace/api-zod";
-import { forumActivityEventsTable, forumCategoriesTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { forumActivityEventsTable, forumCategoriesTable, forumRepliesTable } from "@workspace/db";
+import { and, eq, inArray } from "drizzle-orm";
 
 export const FORUM_CATEGORIES = [
   {
@@ -76,17 +76,34 @@ export async function approveForumActivity(
   target: { threadId?: number; replyId?: number },
   isApproved: boolean,
 ) {
-  const condition =
-    target.threadId != null
-      ? eq(forumActivityEventsTable.threadId, target.threadId)
-      : target.replyId != null
-        ? eq(forumActivityEventsTable.replyId, target.replyId)
-        : undefined;
-  if (!condition) return;
-  await db
-    .update(forumActivityEventsTable)
-    .set({ isApproved })
-    .where(condition);
+  if (target.threadId != null) {
+    await db
+      .update(forumActivityEventsTable)
+      .set({ isApproved: false })
+      .where(eq(forumActivityEventsTable.threadId, target.threadId));
+    if (!isApproved) return;
+    await db
+      .update(forumActivityEventsTable)
+      .set({ isApproved: true })
+      .where(and(eq(forumActivityEventsTable.threadId, target.threadId), eq(forumActivityEventsTable.eventType, "thread_created")));
+    const publishedReplies = await db
+      .select({ id: forumRepliesTable.id })
+      .from(forumRepliesTable)
+      .where(and(eq(forumRepliesTable.threadId, target.threadId), eq(forumRepliesTable.status, "published")));
+    if (publishedReplies.length) {
+      await db
+        .update(forumActivityEventsTable)
+        .set({ isApproved: true })
+        .where(inArray(forumActivityEventsTable.replyId, publishedReplies.map((reply) => reply.id)));
+    }
+    return;
+  }
+  if (target.replyId != null) {
+    await db
+      .update(forumActivityEventsTable)
+      .set({ isApproved })
+      .where(eq(forumActivityEventsTable.replyId, target.replyId));
+  }
 }
 
 export function publicViewer(user: AuthUser | null | undefined): string | undefined {
