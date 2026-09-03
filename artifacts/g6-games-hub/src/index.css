@@ -171,11 +171,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .network-card:nth-child(5) { grid-column: span 12; background: #10131b; }
 .network-card:nth-child(6) { grid-column: span 12; }
 .network-card:nth-child(7) { grid-column: span 12; }
+.network-card:nth-child(8) { grid-column: span 12; }
 .network-card.kinetic { background: #10131b; }
 .network-card.kinetic { border-color: rgba(142, 115, 255, .36); }
 .network-card.kinetic:hover { border-color: #9b86ff; background: #17152a; }
 .network-card.economy { background: #11150f; border-color: rgba(183, 255, 110, .3); }
 .network-card.economy:hover { border-color: #b7ff6e; background: #172011; }
+.network-card.practice { background: #101716; border-color: rgba(73, 224, 198, .3); }
+.network-card.practice:hover { border-color: #49e0c6; background: #13221f; }
 .network-card .card-no { font: 10px var(--app-font-mono); color: hsl(var(--primary)); }
 .network-card h3 { margin: 20px 0 7px; font: 700 clamp(26px, 4vw, 45px)/.9 'Syne'; letter-spacing: -.08em; }
 .network-card p { color: hsl(var(--muted-foreground)); font-size: 12px; max-width: 310px; margin: 0; line-height: 1.5; }
@@ -206,6 +209,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .game-tile.kinetic .tile-top span:first-child, .game-tile.kinetic .tile-cta { color: #a895ff; }
 .game-tile.economy::before { background: repeating-linear-gradient(145deg, transparent, transparent 22px, rgba(183, 255, 110, .06) 23px, transparent 25px), radial-gradient(circle at 18% 24%, rgba(183, 255, 110, .19), transparent 38%); }
 .game-tile.economy .tile-top span:first-child, .game-tile.economy .tile-cta { color: #b7ff6e; }
+.game-tile.practice::before { background: repeating-linear-gradient(135deg, transparent, transparent 18px, rgba(73, 224, 198, .06) 19px, transparent 21px), radial-gradient(circle at 80% 22%, rgba(73, 224, 198, .2), transparent 36%); }
+.game-tile.practice .tile-top span:first-child, .game-tile.practice .tile-cta { color: #49e0c6; }
 .game-tile:hover { transform: translateY(-5px); border-color: hsl(var(--primary)); }
 .game-tile > * { position: relative; z-index: 1; }
 .tile-top { display: flex; justify-content: space-between; font: 10px var(--app-font-mono); color: hsl(var(--muted-foreground)); text-transform: uppercase; }
@@ -233,6 +238,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .detail-hero.economy { background: radial-gradient(ellipse at 72% 26%, rgba(183, 255, 110, .17), transparent 36%), linear-gradient(125deg, #090d09, #111a10 70%, #0b100b); }
 .detail-hero.economy .eyebrow { color: #b7ff6e; }
 .detail-hero.economy h1 em { -webkit-text-stroke-color: #b7ff6e; }
+.detail-hero.practice { background: radial-gradient(ellipse at 72% 26%, rgba(73, 224, 198, .16), transparent 36%), linear-gradient(125deg, #09110f, #10201d 70%, #0b100f); }
+.detail-hero.practice .eyebrow { color: #49e0c6; }
+.detail-hero.practice h1 em { -webkit-text-stroke-color: #49e0c6; }
 .detail-layout { display: grid; grid-template-columns: 1.08fr .92fr; gap: 65px; align-items: end; }
 .detail-hero h1 { margin: 24px 0 16px; font: 800 clamp(50px, 9vw, 115px)/.83 'Syne'; letter-spacing: -.11em; }
 .detail-hero h1 em { font-style: normal; color: transparent; -webkit-text-stroke: 1px hsl(var(--primary)); }

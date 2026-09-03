@@ -91,6 +91,17 @@ export const games: Game[] = [
     signal: 'WEALTH LAB',
     accent: 'economy',
   },
+  {
+    slug: 'lok-coding-practice',
+    title: 'Lok Coding Practice',
+    number: '08',
+    category: 'Learning / Practice',
+    description: 'A focused coding practice room for sharpening syntax, logic, and problem-solving instincts.',
+    long: 'A quiet place to practice code, work through challenges, and turn small repetitions into stronger programming habits.',
+    url: 'https://LokCodingPractice.replit.app/',
+    signal: 'CODE LAB',
+    accent: 'practice',
+  },
 ];
 
 export function gameDetailPath(slug: string) {
