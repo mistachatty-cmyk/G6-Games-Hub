@@ -1,14 +1,20 @@
 import { useCallback, useEffect, useState } from "react";
-import type { AuthUser, CurrentAuthUser } from "@workspace/api-client-react";
+import type {
+  AuthProvider,
+  AuthUser,
+  CurrentAuthUser,
+  MemberRole,
+} from "@workspace/api-client-react";
 
 export type { AuthUser };
 
 interface AuthState {
   user: AuthUser | null;
   isOwner: boolean;
+  role: MemberRole;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: () => void;
+  login: (provider?: AuthProvider) => void;
   logout: () => void;
 }
 
@@ -19,6 +25,7 @@ function getBasePath() {
 export function useAuth(): AuthState {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isOwner, setIsOwner] = useState(false);
+  const [role, setRole] = useState<MemberRole>("member");
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -32,6 +39,7 @@ export function useAuth(): AuthState {
         if (!cancelled) {
           setUser(data.user ?? null);
           setIsOwner(data.isOwner === true);
+          setRole(data.role ?? "member");
           setIsLoading(false);
         }
       })
@@ -39,6 +47,7 @@ export function useAuth(): AuthState {
         if (!cancelled) {
           setUser(null);
           setIsOwner(false);
+          setRole("member");
           setIsLoading(false);
         }
       });
@@ -47,13 +56,13 @@ export function useAuth(): AuthState {
     };
   }, []);
 
-  const login = useCallback(() => {
-    window.location.href = `/api/login?returnTo=${encodeURIComponent(getBasePath())}`;
+  const login = useCallback((provider: AuthProvider = "replit") => {
+    window.location.href = `/api/login?provider=${encodeURIComponent(provider)}&returnTo=${encodeURIComponent(getBasePath())}`;
   }, []);
 
   const logout = useCallback(() => {
     window.location.href = `/api/logout?returnTo=${encodeURIComponent(getBasePath())}`;
   }, []);
 
-  return { user, isOwner, isLoading, isAuthenticated: Boolean(user), login, logout };
+  return { user, isOwner, role, isLoading, isAuthenticated: Boolean(user), login, logout };
 }

@@ -5,11 +5,12 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { AuthUser } from './authUser';
+import type { Badge } from './badge';
 import type { MemberRole } from './memberRole';
 
-export interface CurrentAuthUser {
-  user: AuthUser | null;
-  isOwner: boolean;
+export interface MemberRoleRecord {
+  userId: string;
+  displayName: string;
+  badge: Badge;
   role: MemberRole;
 }

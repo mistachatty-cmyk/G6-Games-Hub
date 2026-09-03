@@ -6,7 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './authProvider';
+export * from './authProviderOption';
+export * from './authProviders';
 export * from './authUser';
+export * from './badge';
 export * from './currentAuthUser';
 export * from './error';
 export * from './feedbackAuthor';
@@ -21,3 +25,11 @@ export * from './gameSocialStats';
 export * from './gameStarInput';
 export * from './getGameSocialStatsParams';
 export * from './healthStatus';
+export * from './memberProfile';
+export * from './memberProfileInput';
+export * from './memberProfileInputBadgeSlug';
+export * from './memberPublicProfile';
+export * from './memberRole';
+export * from './memberRoleInput';
+export * from './memberRoleInputRole';
+export * from './memberRoleRecord';

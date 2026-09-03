@@ -5,11 +5,10 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { AuthUser } from './authUser';
+import type { MemberPublicProfile } from './memberPublicProfile';
 import type { MemberRole } from './memberRole';
 
-export interface CurrentAuthUser {
-  user: AuthUser | null;
-  isOwner: boolean;
+export type MemberProfile = MemberPublicProfile & {
   role: MemberRole;
-}
+  earnedBadges: string[];
+};

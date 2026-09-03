@@ -9,23 +9,79 @@ export const ISSUER_URL = process.env.ISSUER_URL ?? "https://replit.com/oidc";
 export const SESSION_COOKIE = "sid";
 export const SESSION_TTL = 7 * 24 * 60 * 60 * 1000;
 
+export const AUTH_PROVIDERS = ["replit", "google", "apple"] as const;
+export type AuthProvider = (typeof AUTH_PROVIDERS)[number];
+
 export interface SessionData {
   user: AuthUser;
   access_token: string;
   refresh_token?: string;
   expires_at?: number;
+  provider?: AuthProvider;
 }
 
-let oidcConfig: oidc.Configuration | null = null;
+const oidcConfigs = new Map<AuthProvider, oidc.Configuration>();
 
-export async function getOidcConfig(): Promise<oidc.Configuration> {
-  if (!oidcConfig) {
-    oidcConfig = await oidc.discovery(
-      new URL(ISSUER_URL),
-      process.env.REPL_ID!,
-    );
+type ProviderSettings = {
+  issuer: string;
+  clientId: string | undefined;
+  clientSecret?: string;
+};
+
+function getProviderSettings(provider: AuthProvider): ProviderSettings {
+  if (provider === "google") {
+    return {
+      issuer: process.env.GOOGLE_ISSUER_URL ?? "https://accounts.google.com",
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    };
   }
-  return oidcConfig;
+  if (provider === "apple") {
+    return {
+      issuer: process.env.APPLE_ISSUER_URL ?? "https://appleid.apple.com",
+      clientId: process.env.APPLE_CLIENT_ID,
+      clientSecret: process.env.APPLE_CLIENT_SECRET,
+    };
+  }
+  return {
+    issuer: ISSUER_URL,
+    clientId: process.env.REPL_ID,
+  };
+}
+
+export function getAuthProviderClientId(provider: AuthProvider): string | undefined {
+  return getProviderSettings(provider).clientId;
+}
+
+export function isAuthProvider(value: unknown): value is AuthProvider {
+  return typeof value === "string" && AUTH_PROVIDERS.includes(value as AuthProvider);
+}
+
+export function getConfiguredAuthProviders() {
+  return AUTH_PROVIDERS.filter((provider) => {
+    const settings = getProviderSettings(provider);
+    return Boolean(settings.clientId && (provider === "replit" || settings.clientSecret));
+  });
+}
+
+export async function getOidcConfig(provider: AuthProvider = "replit"): Promise<oidc.Configuration> {
+  const cached = oidcConfigs.get(provider);
+  if (cached) return cached;
+
+  const settings = getProviderSettings(provider);
+  if (!settings.clientId || (provider !== "replit" && !settings.clientSecret)) {
+    throw new Error(`${provider} authentication is not configured.`);
+  }
+
+  const config = settings.clientSecret
+    ? await oidc.discovery(
+        new URL(settings.issuer),
+        settings.clientId,
+        settings.clientSecret,
+      )
+    : await oidc.discovery(new URL(settings.issuer), settings.clientId);
+  oidcConfigs.set(provider, config);
+  return config;
 }
 
 export async function createSession(data: SessionData): Promise<string> {

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowUpRight, ChevronDown, ChevronRight, ExternalLink, Menu, Plus, Share2, Trash2, X } from 'lucide-react';
+import { ArrowUpRight, ChevronDown, ChevronRight, ExternalLink, Menu, Plus, Save, Share2, Trash2, X } from 'lucide-react';
 import { Link, Route, Switch, useLocation, useParams, Router as WouterRouter } from 'wouter';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { getGetGameFeedbackQueryKey, getGetGameSocialStatsQueryKey, useGetGameFeedback, useGetGameSocialStats, useReviewGameFeedback, useSubmitGameFeedback, useToggleGameStar, type GameSocialStats } from '@workspace/api-client-react';
+import { getGetGameFeedbackQueryKey, getGetGameSocialStatsQueryKey, getGetMemberRolesQueryKey, getGetMyMemberProfileQueryKey, useGetAuthProviders, useGetGameFeedback, useGetGameSocialStats, useGetMemberBadges, useGetMemberRoles, useGetMyMemberProfile, useReviewGameFeedback, useSubmitGameFeedback, useToggleGameStar, useUpdateMemberRole, useUpdateMyMemberProfile, type AuthProvider, type GameSocialStats, type MemberProfileInput, type MemberRoleInputRole } from '@workspace/api-client-react';
 import { useAuth } from '@workspace/replit-auth-web';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
@@ -119,6 +119,7 @@ function Navigation() {
   const [location] = useLocation();
   const [open, setOpen] = useState(false);
   const [sites, setSites] = useState(false);
+  const auth = useAuth();
   const navRef = useRef<HTMLElement>(null);
   const switcherRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -161,6 +162,7 @@ function Navigation() {
           <Link ref={firstNavLinkRef} href="/" className={`nav-link ${location === '/' ? 'active' : ''}`} aria-current={location === '/' ? 'page' : undefined} onClick={() => closeMenu()}>GSix home</Link>
           <Link href="/games" className={`nav-link ${location.startsWith('/games') ? 'active' : ''}`} aria-current={location.startsWith('/games') ? 'page' : undefined} onClick={() => closeMenu()}>GSix games</Link>
           <Link href="/hire" className={`nav-link ${location === '/hire' ? 'active' : ''}`} aria-current={location === '/hire' ? 'page' : undefined} onClick={() => closeMenu()}>Build with us</Link>
+          <Link href="/profile" className={`nav-link ${location === '/profile' ? 'active' : ''}`} aria-current={location === '/profile' ? 'page' : undefined} onClick={() => closeMenu()}>{auth.isAuthenticated ? 'Member profile' : 'Join G6'}</Link>
         </nav>
         <div className="nav-actions">
           <div className="site-switcher" ref={switcherRef}>
@@ -196,6 +198,8 @@ function Shell({ children }: { children: React.ReactNode }) {
           ? "Build with GSix — Discover What's Grand"
           : location === '/admin'
             ? "GSix Control Room — Discover What's Grand"
+            : location === '/profile'
+              ? "GSix Member Profile — Discover What's Grand"
             : "GSix — Discover What's Grand";
   }, [location]);
   return <div className="g6-app"><a className="skip-link" href="#main-content">Skip to main content</a><Navigation />{children}<Footer /></div>;
@@ -405,7 +409,7 @@ function FeedbackPanel({ game }: { game: Game }) {
   }
 
   if (!auth.isAuthenticated) {
-    return <section className="container-g6 feedback-section"><div className="feedback-panel"><div><span className="eyebrow">Private channel</span><h2>Leave a note for GSix.</h2><p>Tell us what landed, what broke, or what you want to see next. Notes are attached to your account and only visible to the GSix team.</p></div><button className="button-secondary" onClick={auth.login}>Sign in to send feedback <ArrowUpRight size={14} /></button></div></section>;
+    return <section className="container-g6 feedback-section"><div className="feedback-panel"><div><span className="eyebrow">Private channel</span><h2>Leave a note for GSix.</h2><p>Tell us what landed, what broke, or what you want to see next. Notes are attached to your account and only visible to the GSix team.</p></div><button className="button-secondary" onClick={() => auth.login()}>Sign in to send feedback <ArrowUpRight size={14} /></button></div></section>;
   }
 
   if (sent) {
@@ -425,6 +429,70 @@ function Hire() {
     setSent(true);
   };
   return <Shell><main id="main-content" className="form-shell container-g6"><div className="form-grid"><aside><span className="eyebrow">GSix Studio / Open brief</span><h1>MAKE A<br /><span className="text-aqua">DOOR.</span></h1><p className="aside-copy">We build websites with a point of view: memorable, useful, and a little hard to explain at first.</p><p className="aside-copy text-amber" style={{ marginTop: 28 }}>No decks required.<br />Tell us what you are trying to make.</p></aside><div>{sent ? <div className="success-block"><span className="eyebrow">Transmission received</span><h2>We found your note.</h2><p className="text-dim">Someone from the studio will open it soon. Until then, keep exploring.</p><Link className="button-secondary" href="/games" style={{ marginTop: 18 }}>Return to the arcade</Link></div> : <form className="project-form" onSubmit={submit}><div className="field"><label htmlFor="name">01 / Your name</label><input id="name" name="name" required placeholder="What should we call you?" /></div><div className="field"><label htmlFor="email">02 / Contact frequency</label><input id="email" name="email" type="email" required placeholder="you@somewhere.good" /></div><div className="field"><label htmlFor="project">03 / What are we making?</label><select id="project" name="project" defaultValue="A website with a pulse"><option>A website with a pulse</option><option>A game or playable experiment</option><option>A new room for the GSix network</option><option>Something difficult to categorize</option></select></div><div className="field"><label htmlFor="brief">04 / The transmission</label><textarea id="brief" name="brief" required placeholder="A few lines about the idea, the feeling, and what should happen next." /></div><div className="form-submit"><span className="form-note">We usually reply within 2–3 working days.</span><button className="button-primary" type="submit">Send the brief <ArrowUpRight size={15} /></button></div></form>}</div></div></main></Shell>;
+}
+
+function ProviderButtons({ providers, auth }: { providers: { id: AuthProvider; label: string; enabled: boolean }[]; auth: ReturnType<typeof useAuth> }) {
+  return <div className="provider-list">
+    {providers.filter((provider) => provider.enabled).map((provider) => <button className="button-secondary provider-button" type="button" key={provider.id} onClick={() => auth.login(provider.id)}><span className={`provider-dot provider-${provider.id}`} aria-hidden="true" /> Continue with {provider.label} <ArrowUpRight size={14} /></button>)}
+    {providers.every((provider) => !provider.enabled) && <p className="social-status error">No sign-in provider is configured yet.</p>}
+  </div>;
+}
+
+function Profile() {
+  const auth = useAuth();
+  const providers = useGetAuthProviders();
+  const profile = useGetMyMemberProfile({ query: { enabled: auth.isAuthenticated, queryKey: getGetMyMemberProfileQueryKey() } });
+  const badges = useGetMemberBadges();
+  const update = useUpdateMyMemberProfile({
+    mutation: {
+      onSuccess: () => {
+        setSaved(true);
+        queryClient.invalidateQueries({ queryKey: getGetMyMemberProfileQueryKey() });
+      },
+    },
+  });
+  const [displayName, setDisplayName] = useState('');
+  const [badgeSlug, setBadgeSlug] = useState<NonNullable<MemberProfileInput['badgeSlug']>>('lok-clone');
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (!profile.data) return;
+    setDisplayName(profile.data.displayName);
+    setBadgeSlug(profile.data.badge.slug as NonNullable<MemberProfileInput['badgeSlug']>);
+  }, [profile.data]);
+
+  const providerOptions = providers.data?.providers ?? [
+    { id: 'replit' as AuthProvider, label: 'GSix account', enabled: true },
+  ];
+
+  if (auth.isLoading) return <Shell><main id="main-content" className="profile-shell container-g6"><div className="profile-loading"><span className="eyebrow">Member signal</span><span className="skeleton-line" /><span className="skeleton-line short" /></div></main></Shell>;
+
+  if (!auth.isAuthenticated) return <Shell><main id="main-content" className="profile-shell container-g6"><div className="profile-heading"><span className="eyebrow">GSix / Member signal</span><h1>FIND YOUR<br /><span className="text-aqua">FREQUENCY.</span></h1><p>Keep your identity across the network, choose your badge, and make your signal recognizable when the community rooms open.</p></div><section className="auth-state-card profile-auth-card"><div className="brand-mark" style={{ margin: '0 auto' }} /><span className="eyebrow">Member channel</span><h2>Join the network.</h2><p className="locked-note">Your private account details stay server-side. Public community surfaces only show the display name and badge you choose.</p><ProviderButtons providers={providerOptions} auth={auth} /></section></main></Shell>;
+
+  if (profile.isLoading) return <Shell><main id="main-content" className="profile-shell container-g6"><div className="profile-heading"><span className="eyebrow">Member signal / signed in</span><h1>LOADING<br /><span className="text-aqua">PROFILE.</span></h1></div><div className="profile-loading"><span className="skeleton-line" /><span className="skeleton-line" /><span className="skeleton-line short" /></div></main></Shell>;
+
+  if (profile.isError || !profile.data) return <Shell><main id="main-content" className="profile-shell container-g6"><div className="auth-state-card denied"><span className="eyebrow">Member channel</span><h2>The profile signal is quiet.</h2><p className="locked-note">We could not load your member profile. Refresh the page and try again.</p><button className="button-secondary" type="button" onClick={() => profile.refetch()}>Retry connection <ChevronRight size={14} /></button></div></main></Shell>;
+
+  return <Shell><main id="main-content" className="profile-shell container-g6">
+    <div className="profile-heading"><div><span className="eyebrow">GSix / Member signal</span><h1>YOUR<br /><span className="text-aqua">FREQUENCY.</span></h1><p>Shape the small piece of the network that follows you from room to room.</p></div><div className="profile-role status-pill status-reviewed">{auth.role} access</div></div>
+    <div className="profile-grid">
+      <section className="profile-card profile-card-featured">
+        <span className="eyebrow">Current badge</span>
+        <div className="badge-glyph" aria-hidden="true">{profile.data.badge.name.split(' ').map((word) => word[0]).join('')}</div>
+        <h2>{profile.data.badge.name}</h2>
+        <p>{profile.data.badge.description}</p>
+        <span className="badge-slug">{profile.data.badge.slug} / public signal</span>
+      </section>
+      <section className="profile-card">
+        <div className="profile-card-heading"><div><span className="eyebrow">Public identity</span><h2>Make it yours.</h2></div><span className="status-pill status-reviewed">Private account</span></div>
+        <form className="profile-form" onSubmit={(event) => { event.preventDefault(); setSaved(false); update.mutate({ data: { displayName: displayName.trim(), badgeSlug } }); }}>
+          <div className="field"><label htmlFor="member-display-name">Display name</label><input id="member-display-name" value={displayName} onChange={(event) => setDisplayName(event.target.value)} minLength={2} maxLength={24} pattern="[A-Za-z0-9][A-Za-z0-9 _-]{1,23}" required /><small>2–24 letters, numbers, spaces, hyphens, or underscores.</small></div>
+          <div className="field"><label htmlFor="member-badge">Select your badge</label><select id="member-badge" value={badgeSlug} onChange={(event) => setBadgeSlug(event.target.value as NonNullable<MemberProfileInput['badgeSlug']>)}>{(badges.data ?? []).filter((badge) => badge.isSelectable).map((badge) => <option value={badge.slug} key={badge.slug}>{badge.name} — {badge.description}</option>)}</select></div>
+          <div className="profile-form-footer"><span className="form-note">{saved ? 'Signal saved.' : update.isError ? 'That update could not be saved.' : 'Your email stays private.'}</span><button className="button-primary" type="submit" disabled={update.isPending}><Save size={14} /> {update.isPending ? 'Saving…' : 'Save signal'}</button></div>
+        </form>
+      </section>
+    </div>
+  </main></Shell>;
 }
 
 type Track = { id: number; title: string; artist: string; url: string };
@@ -486,6 +554,26 @@ function FeedbackInbox({ isOwner }: { isOwner: boolean }) {
   </section>;
 }
 
+function RoleManager() {
+  const roles = useGetMemberRoles();
+  const update = useUpdateMemberRole({
+    mutation: {
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetMemberRolesQueryKey() }),
+    },
+  });
+  const assignableRoles: MemberRoleInputRole[] = ['member', 'moderator', 'admin'];
+  const memberRows = Array.isArray(roles.data) ? roles.data : [];
+
+  if (roles.isLoading) return <section className="admin-box role-manager"><div className="inbox-heading"><div><span className="eyebrow">Access map</span><h2>Member roles</h2></div><span className="status-pill status-loading">Loading</span></div></section>;
+  if (roles.isError || !Array.isArray(roles.data)) return <section className="admin-box role-manager" role="alert"><div className="inbox-heading"><div><span className="eyebrow">Access map</span><h2>Member roles</h2></div><span className="status-pill status-error">Unavailable</span></div><p className="locked-note">Role assignments could not be loaded.</p><button type="button" className="button-secondary" onClick={() => roles.refetch()}>Retry connection</button></section>;
+
+  return <section className="admin-box role-manager">
+    <div className="inbox-heading"><div><span className="eyebrow">Access map</span><h2>Member roles</h2><p className="locked-note">Only the owner can grant or revoke admin and moderator access. Every change is recorded.</p></div><span className="status-pill status-reviewed">Owner only</span></div>
+    <div className="role-list">{memberRows.map((member) => <div className="role-row" key={member.userId}><div className="role-member"><span className="mini-badge">{member.badge.name.split(' ').map((word) => word[0]).join('')}</span><div><strong>{member.displayName}</strong><small>{member.badge.name} / {member.role} access</small></div></div>{member.role === 'owner' ? <span className="status-pill status-reviewed">Owner</span> : <select aria-label={`Role for ${member.displayName}`} value={member.role} disabled={update.isPending} onChange={(event) => update.mutate({ userId: member.userId, data: { role: event.target.value as MemberRoleInputRole } })}>{assignableRoles.map((role) => <option value={role} key={role}>{role}</option>)}</select>}</div>)}</div>
+    {update.isError && <p className="social-status error" role="alert">That role change could not be saved.</p>}
+  </section>;
+}
+
 function Admin() {
   const auth = useAuth();
   const [tracks, setTracks] = useState<Track[]>(() => { try { return JSON.parse(localStorage.getItem('g6-tracks') || 'null') || starterTracks; } catch { return starterTracks; } });
@@ -493,13 +581,13 @@ function Admin() {
   useEffect(() => { localStorage.setItem('g6-tracks', JSON.stringify(tracks)); }, [tracks]);
   const addTrack = (event: React.FormEvent) => { event.preventDefault(); if (!newTrack.title || !newTrack.url) return; setTracks([...tracks, { ...newTrack, id: Date.now() }]); setNewTrack({ title: '', artist: '', url: '' }); };
   if (auth.isLoading) return <Shell><main id="main-content" className="admin-shell container-g6"><div className="admin-heading"><div><span className="eyebrow">GSix / Control room</span><h1>PRIVATE<br />SIGNAL.</h1></div><span className="status-pill status-loading" data-testid="admin-auth-loading">Checking identity</span></div><div className="admin-auth-skeleton" data-testid="admin-auth-skeleton"><span /><span /><span /></div></main></Shell>;
-  if (!auth.isAuthenticated) return <Shell><main id="main-content" className="admin-shell container-g6"><div className="admin-heading"><div><span className="eyebrow">GSix / Control room</span><h1>PRIVATE<br />SIGNAL.</h1></div><span className="status-pill status-locked">Sign-in required</span></div><div className="auth-state-card" data-testid="admin-sign-in-state"><div className="brand-mark" style={{ margin: '0 auto' }} /><span className="eyebrow">Owner channel</span><h2>Identify yourself.</h2><p className="locked-note">Sign in with your GSix account to open the private review room. Player notes and studio controls stay behind server-authenticated access.</p><button className="button-primary" data-testid="button-admin-sign-in" type="button" onClick={auth.login}>Sign in to control room <ChevronRight size={15} /></button></div></main></Shell>;
+  if (!auth.isAuthenticated) return <Shell><main id="main-content" className="admin-shell container-g6"><div className="admin-heading"><div><span className="eyebrow">GSix / Control room</span><h1>PRIVATE<br />SIGNAL.</h1></div><span className="status-pill status-locked">Sign-in required</span></div><div className="auth-state-card" data-testid="admin-sign-in-state"><div className="brand-mark" style={{ margin: '0 auto' }} /><span className="eyebrow">Owner channel</span><h2>Identify yourself.</h2><p className="locked-note">Sign in with your GSix account to open the private review room. Player notes and studio controls stay behind server-authenticated access.</p><button className="button-primary" data-testid="button-admin-sign-in" type="button" onClick={() => auth.login()}>Sign in to control room <ChevronRight size={15} /></button></div></main></Shell>;
   if (!auth.isOwner) return <Shell><main id="main-content" className="admin-shell container-g6"><div className="admin-heading"><div><span className="eyebrow">GSix / Control room</span><h1>PRIVATE<br />SIGNAL.</h1></div><span className="status-pill status-error">Access denied</span></div><div className="auth-state-card denied" data-testid="admin-access-denied-state"><div className="brand-mark" style={{ margin: '0 auto' }} /><span className="eyebrow">Restricted channel</span><h2>This door is not yours.</h2><p className="locked-note">Your account is signed in, but the control room is reserved for the GSix owner. No private feedback was loaded.</p><Link className="button-secondary" data-testid="link-return-from-admin-denied" href="/games">Return to the arcade <ArrowUpRight size={14} /></Link></div></main></Shell>;
-  return <Shell><main id="main-content" className="admin-shell container-g6"><div className="admin-heading"><div><span className="eyebrow">GSix / Control room / owner access</span><h1>PRIVATE<br /><span className="text-aqua">SIGNALS.</span></h1><p className="admin-heading-copy">A quiet room for the notes players leave behind.</p></div><button className="button-secondary" data-testid="button-admin-sign-out" type="button" onClick={auth.logout}>Sign out</button></div><FeedbackInbox isOwner={auth.isOwner} /><div className="admin-panel"><form className="admin-box" onSubmit={addTrack}><h2>Add a track.</h2><p className="locked-note">Tracks persist in this browser and can be used by the next transmission.</p><div className="field"><label htmlFor="track-title">Title</label><input id="track-title" data-testid="input-track-title" required value={newTrack.title} onChange={(e) => setNewTrack({ ...newTrack, title: e.target.value })} placeholder="Track title" /></div><div className="field"><label htmlFor="track-artist">Artist / source</label><input id="track-artist" data-testid="input-track-artist" value={newTrack.artist} onChange={(e) => setNewTrack({ ...newTrack, artist: e.target.value })} placeholder="Who made the noise?" /></div><div className="field"><label htmlFor="track-url">Audio URL</label><input id="track-url" data-testid="input-track-url" type="url" required value={newTrack.url} onChange={(e) => setNewTrack({ ...newTrack, url: e.target.value })} placeholder="https://..." /></div><button className="button-primary" data-testid="button-add-track" type="submit"><Plus size={15} /> Add to rotation</button></form><section className="admin-box"><h2>Current rotation <span className="text-aqua" style={{ font: '11px var(--app-font-mono)' }}>/{tracks.length}</span></h2><div className="track-list">{tracks.map((track) => <div className="track-row" key={track.id} data-testid={`track-row-${track.id}`}><div><strong data-testid={`track-title-${track.id}`}>{track.title}</strong><small>{track.artist || 'Uncredited'} / {track.url}</small></div><button className="delete-btn" aria-label={`Remove ${track.title}`} data-testid={`button-remove-track-${track.id}`} onClick={() => setTracks(tracks.filter((item) => item.id !== track.id))}><Trash2 size={15} aria-hidden="true" /> remove</button></div>)}</div></section></div></main></Shell>;
+  return <Shell><main id="main-content" className="admin-shell container-g6"><div className="admin-heading"><div><span className="eyebrow">GSix / Control room / owner access</span><h1>PRIVATE<br /><span className="text-aqua">SIGNALS.</span></h1><p className="admin-heading-copy">A quiet room for the notes players leave behind.</p></div><button className="button-secondary" data-testid="button-admin-sign-out" type="button" onClick={auth.logout}>Sign out</button></div><FeedbackInbox isOwner={auth.isOwner} /><RoleManager /><div className="admin-panel"><form className="admin-box" onSubmit={addTrack}><h2>Add a track.</h2><p className="locked-note">Tracks persist in this browser and can be used by the next transmission.</p><div className="field"><label htmlFor="track-title">Title</label><input id="track-title" data-testid="input-track-title" required value={newTrack.title} onChange={(e) => setNewTrack({ ...newTrack, title: e.target.value })} placeholder="Track title" /></div><div className="field"><label htmlFor="track-artist">Artist / source</label><input id="track-artist" data-testid="input-track-artist" value={newTrack.artist} onChange={(e) => setNewTrack({ ...newTrack, artist: e.target.value })} placeholder="Who made the noise?" /></div><div className="field"><label htmlFor="track-url">Audio URL</label><input id="track-url" data-testid="input-track-url" type="url" required value={newTrack.url} onChange={(e) => setNewTrack({ ...newTrack, url: e.target.value })} placeholder="https://..." /></div><button className="button-primary" data-testid="button-add-track" type="submit"><Plus size={15} /> Add to rotation</button></form><section className="admin-box"><h2>Current rotation <span className="text-aqua" style={{ font: '11px var(--app-font-mono)' }}>/{tracks.length}</span></h2><div className="track-list">{tracks.map((track) => <div className="track-row" key={track.id} data-testid={`track-row-${track.id}`}><div><strong data-testid={`track-title-${track.id}`}>{track.title}</strong><small>{track.artist || 'Uncredited'} / {track.url}</small></div><button className="delete-btn" aria-label={`Remove ${track.title}`} data-testid={`button-remove-track-${track.id}`} onClick={() => setTracks(tracks.filter((item) => item.id !== track.id))}><Trash2 size={15} aria-hidden="true" /> remove</button></div>)}</div></section></div></main></Shell>;
 }
 
 function Router() {
-  return <ErrorBoundary><Switch><Route path="/" component={Home} /><Route path={GAMES_DIRECTORY_PATH} component={Games} /><Route path={GAME_DETAIL_ROUTE} component={GameDetail} /><Route path="/hire" component={Hire} /><Route path="/admin" component={Admin} /><Route component={NotFound} /></Switch></ErrorBoundary>;
+  return <ErrorBoundary><Switch><Route path="/" component={Home} /><Route path={GAMES_DIRECTORY_PATH} component={Games} /><Route path={GAME_DETAIL_ROUTE} component={GameDetail} /><Route path="/hire" component={Hire} /><Route path="/profile" component={Profile} /><Route path="/admin" component={Admin} /><Route component={NotFound} /></Switch></ErrorBoundary>;
 }
 
 function App() {

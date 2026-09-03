@@ -21,9 +21,101 @@ export interface AuthUser {
   profileImageUrl: string | null;
 }
 
+export type MemberRole = typeof MemberRole[keyof typeof MemberRole];
+
+
+export const MemberRole = {
+  member: 'member',
+  moderator: 'moderator',
+  admin: 'admin',
+  owner: 'owner',
+} as const;
+
 export interface CurrentAuthUser {
   user: AuthUser | null;
   isOwner: boolean;
+  role: MemberRole;
+}
+
+export type AuthProvider = typeof AuthProvider[keyof typeof AuthProvider];
+
+
+export const AuthProvider = {
+  replit: 'replit',
+  google: 'google',
+  apple: 'apple',
+} as const;
+
+export interface AuthProviderOption {
+  id: AuthProvider;
+  label: string;
+  enabled: boolean;
+}
+
+export interface AuthProviders {
+  providers: AuthProviderOption[];
+}
+
+export interface Badge {
+  slug: string;
+  name: string;
+  description: string;
+  isDefault: boolean;
+  isSelectable: boolean;
+}
+
+export interface MemberPublicProfile {
+  userId: string;
+  displayName: string;
+  badge: Badge;
+  createdAt: string;
+}
+
+export type MemberProfile = MemberPublicProfile & {
+  role: MemberRole;
+  earnedBadges: string[];
+};
+
+export type MemberProfileInputBadgeSlug = typeof MemberProfileInputBadgeSlug[keyof typeof MemberProfileInputBadgeSlug];
+
+
+export const MemberProfileInputBadgeSlug = {
+  'lok-clone': 'lok-clone',
+  'lok-knight': 'lok-knight',
+  'lokness-monster': 'lokness-monster',
+  'lok-clown': 'lok-clown',
+  'lok-loner': 'lok-loner',
+  'lok-lit': 'lok-lit',
+} as const;
+
+export interface MemberProfileInput {
+  /**
+     * @minLength 2
+     * @maxLength 24
+     * @pattern ^[A-Za-z0-9][A-Za-z0-9 _-]{1,23}$
+     */
+  displayName?: string;
+  badgeSlug?: MemberProfileInputBadgeSlug;
+}
+
+export interface MemberRoleRecord {
+  userId: string;
+  displayName: string;
+  badge: Badge;
+  role: MemberRole;
+}
+
+export type MemberRoleInputRole = typeof MemberRoleInputRole[keyof typeof MemberRoleInputRole];
+
+
+export const MemberRoleInputRole = {
+  member: 'member',
+  moderator: 'moderator',
+  admin: 'admin',
+} as const;
+
+export interface MemberRoleInput {
+  role: MemberRoleInputRole;
 }
 
 export interface GameSocialStats {
@@ -109,3 +201,4 @@ export type GetGameSocialStatsParams = {
  */
 voterId?: string;
 };
+

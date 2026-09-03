@@ -5,7 +5,7 @@ test.beforeEach(async ({ page }) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ user: null, isOwner: false }),
+      body: JSON.stringify({ user: null, isOwner: false, role: 'member' }),
     });
   });
   await page.route('**/api/games/stats**', async (route) => {
@@ -28,11 +28,11 @@ test.describe('keyboard navigation', () => {
 
     const primaryNavigation = page.getByRole('navigation', { name: 'Primary navigation' });
     const navigationLinks = primaryNavigation.getByRole('link');
-    await expect(navigationLinks).toHaveCount(3);
-    for (let index = 0; index < 3; index += 1) {
+    await expect(navigationLinks).toHaveCount(4);
+    for (let index = 0; index < 4; index += 1) {
       await navigationLinks.nth(index).focus();
       await expect(navigationLinks.nth(index)).toBeFocused();
-      await expect(navigationLinks.nth(index)).toHaveAttribute('href', /^(\/|\/games|\/hire)$/);
+      await expect(navigationLinks.nth(index)).toHaveAttribute('href', /^(\/|\/games|\/hire|\/profile)$/);
     }
   });
 
@@ -162,6 +162,7 @@ test.describe('signed-in actions', () => {
             profileImageUrl: null,
           },
           isOwner: false,
+          role: 'member',
         }),
       });
     });
@@ -214,6 +215,7 @@ test.describe('signed-in actions', () => {
             profileImageUrl: null,
           },
           isOwner: true,
+          role: 'owner',
         }),
       });
     });

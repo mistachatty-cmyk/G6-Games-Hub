@@ -14,6 +14,8 @@ tags:
     description: Authentication operations
   - name: games
     description: Game social operations
+  - name: members
+    description: Member profiles, badges, and roles
 paths:
   /healthz:
     get:
@@ -64,6 +66,187 @@ paths:
       responses:
         "302":
           description: Redirects back to the app
+  /auth/providers:
+    get:
+      operationId: getAuthProviders
+      tags: [auth]
+      summary: List configured sign-in providers
+      responses:
+        "200":
+          description: Sign-in provider availability
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthProviders"
+  /members/badges:
+    get:
+      operationId: getMemberBadges
+      tags: [members]
+      summary: List the G6 badge catalog
+      responses:
+        "200":
+          description: Public badge catalog
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Badge"
+  /members/me:
+    get:
+      operationId: getMyMemberProfile
+      tags: [members]
+      summary: Get the signed-in member profile
+      responses:
+        "200":
+          description: Current member profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberProfile"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    patch:
+      operationId: updateMyMemberProfile
+      tags: [members]
+      summary: Update the signed-in member profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberProfileInput"
+      responses:
+        "200":
+          description: Updated member profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberProfile"
+        "400":
+          description: Invalid profile update
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Display name already in use
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /members/{userId}:
+    get:
+      operationId: getMemberPublicProfile
+      tags: [members]
+      summary: Get a public member profile
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+      responses:
+        "200":
+          description: Public member profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberPublicProfile"
+        "404":
+          description: Member not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /members/roles:
+    get:
+      operationId: getMemberRoles
+      tags: [members]
+      summary: List member roles for the owner
+      responses:
+        "200":
+          description: Member role assignments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MemberRoleRecord"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Owner access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /members/roles/{userId}:
+    patch:
+      operationId: updateMemberRole
+      tags: [members]
+      summary: Assign or revoke an admin or moderator role
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberRoleInput"
+      responses:
+        "200":
+          description: Updated role assignment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberRoleRecord"
+        "400":
+          description: Invalid role update
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Owner access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Member not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /games/stats:
     get:
       operationId: getGameSocialStats
@@ -263,7 +446,105 @@ components:
             - type: "null"
         isOwner:
           type: boolean
-      required: [user, isOwner]
+        role:
+          $ref: "#/components/schemas/MemberRole"
+      required: [user, isOwner, role]
+    AuthProvider:
+      type: string
+      enum: [replit, google, apple]
+    AuthProviderOption:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/AuthProvider"
+        label:
+          type: string
+        enabled:
+          type: boolean
+      required: [id, label, enabled]
+    AuthProviders:
+      type: object
+      properties:
+        providers:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuthProviderOption"
+      required: [providers]
+    Badge:
+      type: object
+      properties:
+        slug:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        isDefault:
+          type: boolean
+        isSelectable:
+          type: boolean
+      required: [slug, name, description, isDefault, isSelectable]
+    MemberRole:
+      type: string
+      enum: [member, moderator, admin, owner]
+    MemberPublicProfile:
+      type: object
+      properties:
+        userId:
+          type: string
+        displayName:
+          type: string
+        badge:
+          $ref: "#/components/schemas/Badge"
+        createdAt:
+          type: string
+          format: date-time
+      required: [userId, displayName, badge, createdAt]
+    MemberProfile:
+      allOf:
+        - $ref: "#/components/schemas/MemberPublicProfile"
+        - type: object
+          properties:
+            role:
+              $ref: "#/components/schemas/MemberRole"
+            earnedBadges:
+              type: array
+              items:
+                type: string
+          required: [role, earnedBadges]
+    MemberProfileInput:
+      type: object
+      properties:
+        displayName:
+          type: string
+          minLength: 2
+          maxLength: 24
+          pattern: "^[A-Za-z0-9][A-Za-z0-9 _-]{1,23}$"
+        badgeSlug:
+          type: string
+          enum: [lok-clone, lok-knight, lokness-monster, lok-clown, lok-loner, lok-lit]
+      minProperties: 1
+      additionalProperties: false
+    MemberRoleRecord:
+      type: object
+      properties:
+        userId:
+          type: string
+        displayName:
+          type: string
+        badge:
+          $ref: "#/components/schemas/Badge"
+        role:
+          $ref: "#/components/schemas/MemberRole"
+      required: [userId, displayName, badge, role]
+    MemberRoleInput:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [member, moderator, admin]
+      required: [role]
+      additionalProperties: false
     GameSocialStats:
       type: object
       properties:

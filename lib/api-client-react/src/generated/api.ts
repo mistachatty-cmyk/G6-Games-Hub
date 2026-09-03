@@ -20,6 +20,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AuthProviders,
+  Badge,
   CurrentAuthUser,
   Error,
   FeedbackGroup,
@@ -30,7 +32,12 @@ import type {
   GameSocialStats,
   GameStarInput,
   GetGameSocialStatsParams,
-  HealthStatus
+  HealthStatus,
+  MemberProfile,
+  MemberProfileInput,
+  MemberPublicProfile,
+  MemberRoleInput,
+  MemberRoleRecord
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -446,6 +453,534 @@ export function useLogout<TData = Awaited<ReturnType<typeof logout>>, TError = E
 
 
 
+export const getGetAuthProvidersUrl = () => {
+
+
+
+
+  return `/api/auth/providers`
+}
+
+/**
+ * @summary List configured sign-in providers
+ */
+export const getAuthProviders = async ( options?: Parameters<typeof customFetch>[1]): Promise<AuthProviders> => {
+
+  return customFetch<AuthProviders>(getGetAuthProvidersUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAuthProvidersQueryKey = () => {
+    return [
+    `/api/auth/providers`
+    ] as const;
+    }
+
+
+export const getGetAuthProvidersQueryOptions = <TData = Awaited<ReturnType<typeof getAuthProviders>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAuthProviders>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAuthProvidersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAuthProviders>>> = ({ signal }) => getAuthProviders({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAuthProviders>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAuthProvidersQueryResult = NonNullable<Awaited<ReturnType<typeof getAuthProviders>>>
+export type GetAuthProvidersQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List configured sign-in providers
+ */
+
+export function useGetAuthProviders<TData = Awaited<ReturnType<typeof getAuthProviders>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAuthProviders>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAuthProvidersQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetMemberBadgesUrl = () => {
+
+
+
+
+  return `/api/members/badges`
+}
+
+/**
+ * @summary List the G6 badge catalog
+ */
+export const getMemberBadges = async ( options?: Parameters<typeof customFetch>[1]): Promise<Badge[]> => {
+
+  return customFetch<Badge[]>(getGetMemberBadgesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMemberBadgesQueryKey = () => {
+    return [
+    `/api/members/badges`
+    ] as const;
+    }
+
+
+export const getGetMemberBadgesQueryOptions = <TData = Awaited<ReturnType<typeof getMemberBadges>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMemberBadges>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMemberBadgesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMemberBadges>>> = ({ signal }) => getMemberBadges({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMemberBadges>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMemberBadgesQueryResult = NonNullable<Awaited<ReturnType<typeof getMemberBadges>>>
+export type GetMemberBadgesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List the G6 badge catalog
+ */
+
+export function useGetMemberBadges<TData = Awaited<ReturnType<typeof getMemberBadges>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMemberBadges>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMemberBadgesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetMyMemberProfileUrl = () => {
+
+
+
+
+  return `/api/members/me`
+}
+
+/**
+ * @summary Get the signed-in member profile
+ */
+export const getMyMemberProfile = async ( options?: Parameters<typeof customFetch>[1]): Promise<MemberProfile> => {
+
+  return customFetch<MemberProfile>(getGetMyMemberProfileUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMyMemberProfileQueryKey = () => {
+    return [
+    `/api/members/me`
+    ] as const;
+    }
+
+
+export const getGetMyMemberProfileQueryOptions = <TData = Awaited<ReturnType<typeof getMyMemberProfile>>, TError = ErrorType<Error>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyMemberProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyMemberProfileQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyMemberProfile>>> = ({ signal }) => getMyMemberProfile({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyMemberProfile>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMyMemberProfileQueryResult = NonNullable<Awaited<ReturnType<typeof getMyMemberProfile>>>
+export type GetMyMemberProfileQueryError = ErrorType<Error>
+
+
+/**
+ * @summary Get the signed-in member profile
+ */
+
+export function useGetMyMemberProfile<TData = Awaited<ReturnType<typeof getMyMemberProfile>>, TError = ErrorType<Error>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyMemberProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMyMemberProfileQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateMyMemberProfileUrl = () => {
+
+
+
+
+  return `/api/members/me`
+}
+
+/**
+ * @summary Update the signed-in member profile
+ */
+export const updateMyMemberProfile = async (memberProfileInput: MemberProfileInput, options?: Parameters<typeof customFetch>[1]): Promise<MemberProfile> => {
+
+  return customFetch<MemberProfile>(getUpdateMyMemberProfileUrl(),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(memberProfileInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateMyMemberProfileMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMyMemberProfile>>, TError,{data: BodyType<MemberProfileInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateMyMemberProfile>>, TError,{data: BodyType<MemberProfileInput>}, TContext> => {
+
+const mutationKey = ['updateMyMemberProfile'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateMyMemberProfile>>, {data: BodyType<MemberProfileInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateMyMemberProfile(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateMyMemberProfileMutationResult = NonNullable<Awaited<ReturnType<typeof updateMyMemberProfile>>>
+    export type UpdateMyMemberProfileMutationBody = BodyType<MemberProfileInput>
+    export type UpdateMyMemberProfileMutationError = ErrorType<Error>
+
+    /**
+ * @summary Update the signed-in member profile
+ */
+export const useUpdateMyMemberProfile = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMyMemberProfile>>, TError,{data: BodyType<MemberProfileInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateMyMemberProfile>>,
+        TError,
+        {data: BodyType<MemberProfileInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateMyMemberProfileMutationOptions(options));
+    }
+
+export const getGetMemberPublicProfileUrl = (userId: string,) => {
+
+
+
+
+  return `/api/members/${userId}`
+}
+
+/**
+ * @summary Get a public member profile
+ */
+export const getMemberPublicProfile = async (userId: string, options?: Parameters<typeof customFetch>[1]): Promise<MemberPublicProfile> => {
+
+  return customFetch<MemberPublicProfile>(getGetMemberPublicProfileUrl(userId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMemberPublicProfileQueryKey = (userId: string,) => {
+    return [
+    `/api/members/${userId}`
+    ] as const;
+    }
+
+
+export const getGetMemberPublicProfileQueryOptions = <TData = Awaited<ReturnType<typeof getMemberPublicProfile>>, TError = ErrorType<Error>>(userId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMemberPublicProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMemberPublicProfileQueryKey(userId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMemberPublicProfile>>> = ({ signal }) => getMemberPublicProfile(userId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: userId !== null && userId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMemberPublicProfile>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMemberPublicProfileQueryResult = NonNullable<Awaited<ReturnType<typeof getMemberPublicProfile>>>
+export type GetMemberPublicProfileQueryError = ErrorType<Error>
+
+
+/**
+ * @summary Get a public member profile
+ */
+
+export function useGetMemberPublicProfile<TData = Awaited<ReturnType<typeof getMemberPublicProfile>>, TError = ErrorType<Error>>(
+ userId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMemberPublicProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMemberPublicProfileQueryOptions(userId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetMemberRolesUrl = () => {
+
+
+
+
+  return `/api/members/roles`
+}
+
+/**
+ * @summary List member roles for the owner
+ */
+export const getMemberRoles = async ( options?: Parameters<typeof customFetch>[1]): Promise<MemberRoleRecord[]> => {
+
+  return customFetch<MemberRoleRecord[]>(getGetMemberRolesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMemberRolesQueryKey = () => {
+    return [
+    `/api/members/roles`
+    ] as const;
+    }
+
+
+export const getGetMemberRolesQueryOptions = <TData = Awaited<ReturnType<typeof getMemberRoles>>, TError = ErrorType<Error>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMemberRoles>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMemberRolesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMemberRoles>>> = ({ signal }) => getMemberRoles({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMemberRoles>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMemberRolesQueryResult = NonNullable<Awaited<ReturnType<typeof getMemberRoles>>>
+export type GetMemberRolesQueryError = ErrorType<Error>
+
+
+/**
+ * @summary List member roles for the owner
+ */
+
+export function useGetMemberRoles<TData = Awaited<ReturnType<typeof getMemberRoles>>, TError = ErrorType<Error>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMemberRoles>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMemberRolesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateMemberRoleUrl = (userId: string,) => {
+
+
+
+
+  return `/api/members/roles/${userId}`
+}
+
+/**
+ * @summary Assign or revoke an admin or moderator role
+ */
+export const updateMemberRole = async (userId: string,
+    memberRoleInput: MemberRoleInput, options?: Parameters<typeof customFetch>[1]): Promise<MemberRoleRecord> => {
+
+  return customFetch<MemberRoleRecord>(getUpdateMemberRoleUrl(userId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(memberRoleInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateMemberRoleMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMemberRole>>, TError,{userId: string;data: BodyType<MemberRoleInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateMemberRole>>, TError,{userId: string;data: BodyType<MemberRoleInput>}, TContext> => {
+
+const mutationKey = ['updateMemberRole'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateMemberRole>>, {userId: string;data: BodyType<MemberRoleInput>}> = (props) => {
+          const {userId,data} = props ?? {};
+
+          return  updateMemberRole(userId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateMemberRoleMutationResult = NonNullable<Awaited<ReturnType<typeof updateMemberRole>>>
+    export type UpdateMemberRoleMutationBody = BodyType<MemberRoleInput>
+    export type UpdateMemberRoleMutationError = ErrorType<Error>
+
+    /**
+ * @summary Assign or revoke an admin or moderator role
+ */
+export const useUpdateMemberRole = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMemberRole>>, TError,{userId: string;data: BodyType<MemberRoleInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateMemberRole>>,
+        TError,
+        {userId: string;data: BodyType<MemberRoleInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateMemberRoleMutationOptions(options));
+    }
+
 export const getGetGameSocialStatsUrl = (params?: GetGameSocialStatsParams,) => {
   const normalizedParams = new URLSearchParams();
 
@@ -822,3 +1357,4 @@ export const useReviewGameFeedback = <TError = ErrorType<Error>,
       > => {
       return useMutation(getReviewGameFeedbackMutationOptions(options));
     }
+

@@ -329,6 +329,45 @@ body.is-game-focused { overflow: hidden; }
 .delete-btn:hover { text-decoration: underline; }
 .locked-note { color: hsl(var(--muted-foreground)); font: 10px var(--app-font-mono); line-height: 1.7; }
 
+.profile-shell { padding: 65px 0 120px; }
+.profile-heading { display: flex; justify-content: space-between; align-items: end; gap: 30px; border-bottom: 1px solid hsl(var(--border)); padding-bottom: 32px; }
+.profile-heading h1 { margin: 17px 0 18px; font: 800 clamp(45px, 7vw, 85px)/.85 'Syne'; letter-spacing: -.1em; }
+.profile-heading p { color: hsl(var(--muted-foreground)); line-height: 1.6; max-width: 430px; font-size: 13px; margin: 0; }
+.profile-role { align-self: flex-start; color: hsl(var(--primary)); }
+.profile-grid { display: grid; grid-template-columns: .75fr 1.25fr; gap: 14px; margin-top: 30px; }
+.profile-card { border: 1px solid hsl(var(--border)); padding: 30px; background: rgba(13, 17, 17, .72); min-width: 0; }
+.profile-card-featured { background: radial-gradient(circle at 74% 22%, rgba(124, 255, 236, .15), transparent 34%), linear-gradient(145deg, #101c1b, #0b0e0e); display: flex; flex-direction: column; align-items: flex-start; }
+.profile-card h2 { font: 700 30px/.95 'Syne'; letter-spacing: -.07em; margin: 13px 0 10px; }
+.profile-card p { color: hsl(var(--muted-foreground)); line-height: 1.6; font-size: 13px; max-width: 360px; margin: 0; }
+.badge-glyph { width: 94px; height: 94px; display: grid; place-items: center; margin: 40px 0 24px; border: 1px solid hsl(var(--primary)); color: hsl(var(--primary)); font: 800 29px 'Syne'; letter-spacing: -.12em; transform: rotate(-8deg); box-shadow: 12px 12px 0 rgba(245, 183, 80, .17); }
+.badge-slug { color: hsl(var(--secondary)); font: 9px var(--app-font-mono); letter-spacing: .11em; text-transform: uppercase; margin-top: 25px; }
+.profile-card-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; border-bottom: 1px solid hsl(var(--border)); padding-bottom: 20px; }
+.profile-card-heading h2 { margin-bottom: 0; }
+.profile-form { margin-top: 8px; }
+.profile-form .field { padding: 20px 0; }
+.profile-form .field small { display: block; color: hsl(var(--muted-foreground)); font: 10px var(--app-font-mono); margin-top: 9px; }
+.profile-form-footer { display: flex; justify-content: space-between; align-items: center; gap: 18px; padding-top: 20px; }
+.profile-form-footer .button-primary { white-space: nowrap; }
+.profile-loading { max-width: 680px; margin: 60px 0; display: grid; gap: 13px; }
+.skeleton-line { display: block; height: 64px; border: 1px solid hsl(var(--border)); background: linear-gradient(90deg, rgba(124, 255, 236, .025), rgba(124, 255, 236, .09), rgba(124, 255, 236, .025)); background-size: 200% 100%; animation: skeleton-shift 1.6s ease-in-out infinite; }
+.skeleton-line.short { width: 65%; }
+.profile-auth-card { max-width: 580px; margin-top: 55px; }
+.provider-list { display: grid; gap: 9px; margin-top: 20px; }
+.provider-button { width: 100%; justify-content: flex-start; }
+.provider-dot { width: 8px; height: 8px; border-radius: 50%; background: hsl(var(--primary)); box-shadow: 0 0 12px currentColor; }
+.provider-google { background: #4285f4; }
+.provider-apple { background: #f4f4f4; }
+.role-manager { margin-top: 30px; }
+.role-list { display: grid; gap: 8px; padding-top: 25px; }
+.role-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; border: 1px solid hsl(var(--border)); padding: 12px 14px; }
+.role-member { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.role-member div { min-width: 0; }
+.role-member strong { display: block; font-size: 13px; }
+.role-member small { display: block; color: hsl(var(--muted-foreground)); font: 10px var(--app-font-mono); margin-top: 5px; text-transform: uppercase; }
+.mini-badge { flex: 0 0 auto; width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid hsl(var(--primary)); color: hsl(var(--primary)); font: 700 10px 'Syne'; transform: rotate(-7deg); }
+.role-row select { min-height: 40px; min-width: 118px; padding: 7px 9px; color: hsl(var(--foreground)); background: #101717; border: 1px solid hsl(var(--border)); text-transform: uppercase; font: 10px var(--app-font-mono); }
+.role-row select:focus { border-color: hsl(var(--primary)); outline: none; }
+
 .admin-heading-copy { color: hsl(var(--muted-foreground)); font-size: 13px; line-height: 1.55; margin: 20px 0 0; max-width: 390px; }
 .status-pill { display: inline-flex; align-items: center; gap: 7px; border: 1px solid hsl(var(--border)); padding: 7px 9px; color: hsl(var(--muted-foreground)); font: 9px var(--app-font-mono); letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
 .status-pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .85; }
@@ -409,6 +448,7 @@ body.is-game-focused { overflow: hidden; }
   .nav-admin { display: none; }
   .hero { min-height: calc(100svh - 68px); padding: 58px 0 82px; }
   .hero-grid, .detail-layout, .form-grid, .admin-panel { grid-template-columns: 1fr; gap: 42px; }
+  .profile-grid { grid-template-columns: 1fr; }
   .hero h1 { font-size: clamp(66px, 20vw, 130px); }
   .orbit { width: 85%; margin: 0 auto; }
   .section { padding: 78px 0; }
@@ -442,6 +482,13 @@ body.is-game-focused { overflow: hidden; }
   .form-submit { align-items: flex-start; flex-direction: column-reverse; }
   .admin-heading { align-items: flex-start; flex-direction: column; gap: 18px; }
   .admin-heading .button-secondary { width: 100%; }
+  .profile-heading { align-items: flex-start; flex-direction: column; gap: 18px; }
+  .profile-role { align-self: auto; }
+  .profile-card { padding: 22px; }
+  .profile-card-heading { display: block; }
+  .profile-card-heading .status-pill { margin-top: 16px; }
+  .profile-form-footer { align-items: flex-start; flex-direction: column; }
+  .profile-form-footer .button-primary { width: 100%; }
   .auth-state-card { margin: 55px auto 85px; padding: 34px 22px; }
   .feedback-inbox { margin-top: 18px; padding: 20px 16px; }
   .inbox-heading { display: block; }
@@ -454,6 +501,8 @@ body.is-game-focused { overflow: hidden; }
   .feedback-note-footer { align-items: flex-start; flex-direction: column; gap: 12px; }
   .track-row { align-items: flex-start; flex-direction: column; }
   .track-row small { max-width: 100%; }
+  .role-row { align-items: flex-start; flex-direction: column; }
+  .role-row select { width: 100%; }
 }
 
 @media (max-width: 560px) {

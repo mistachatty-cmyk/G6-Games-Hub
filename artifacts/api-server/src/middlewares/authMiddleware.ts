@@ -35,7 +35,7 @@ async function refreshIfExpired(
 
   try {
     const tokens = await oidc.refreshTokenGrant(
-      await getOidcConfig(),
+      await getOidcConfig(session.provider ?? "replit"),
       session.refresh_token,
     );
     session.access_token = tokens.access_token;

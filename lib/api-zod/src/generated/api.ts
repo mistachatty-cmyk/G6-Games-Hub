@@ -15,6 +15,8 @@ import * as zod from 'zod';
 export const HealthCheckResponse = zod.object({
   "status": zod.string()
 })
+
+
 /**
  * @summary Get the current signed-in user
  */
@@ -26,8 +28,11 @@ export const GetCurrentAuthUserResponse = zod.object({
   "lastName": zod.string().nullable(),
   "profileImageUrl": zod.string().nullable()
 }),zod.null()]),
-  "isOwner": zod.boolean()
+  "isOwner": zod.boolean(),
+  "role": zod.enum(['member', 'moderator', 'admin', 'owner'])
 })
+
+
 /**
  * @summary Start sign-in
  */
@@ -44,6 +49,155 @@ export const AuthCallbackResponse = zod.void()
  * @summary Sign out
  */
 export const LogoutResponse = zod.void()
+
+
+/**
+ * @summary List configured sign-in providers
+ */
+export const GetAuthProvidersResponse = zod.object({
+  "providers": zod.array(zod.object({
+  "id": zod.enum(['replit', 'google', 'apple']),
+  "label": zod.string(),
+  "enabled": zod.boolean()
+}))
+})
+
+
+/**
+ * @summary List the G6 badge catalog
+ */
+export const GetMemberBadgesResponseItem = zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "isDefault": zod.boolean(),
+  "isSelectable": zod.boolean()
+})
+export const GetMemberBadgesResponse = zod.array(GetMemberBadgesResponseItem)
+
+
+/**
+ * @summary Get the signed-in member profile
+ */
+export const GetMyMemberProfileResponse = zod.object({
+  "userId": zod.string(),
+  "displayName": zod.string(),
+  "badge": zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "isDefault": zod.boolean(),
+  "isSelectable": zod.boolean()
+}),
+  "createdAt": zod.coerce.date()
+}).and(zod.object({
+  "role": zod.enum(['member', 'moderator', 'admin', 'owner']),
+  "earnedBadges": zod.array(zod.string())
+}))
+
+
+/**
+ * @summary Update the signed-in member profile
+ */
+export const updateMyMemberProfileBodyDisplayNameMin = 2;
+export const updateMyMemberProfileBodyDisplayNameMax = 24;
+
+
+export const updateMyMemberProfileBodyDisplayNameRegExp = new RegExp('^[A-Za-z0-9][A-Za-z0-9 _-]{1,23}$');
+
+
+export const UpdateMyMemberProfileBody = zod.object({
+  "displayName": zod.string().min(updateMyMemberProfileBodyDisplayNameMin).max(updateMyMemberProfileBodyDisplayNameMax).regex(updateMyMemberProfileBodyDisplayNameRegExp).optional(),
+  "badgeSlug": zod.enum(['lok-clone', 'lok-knight', 'lokness-monster', 'lok-clown', 'lok-loner', 'lok-lit']).optional()
+})
+
+export const UpdateMyMemberProfileResponse = zod.object({
+  "userId": zod.string(),
+  "displayName": zod.string(),
+  "badge": zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "isDefault": zod.boolean(),
+  "isSelectable": zod.boolean()
+}),
+  "createdAt": zod.coerce.date()
+}).and(zod.object({
+  "role": zod.enum(['member', 'moderator', 'admin', 'owner']),
+  "earnedBadges": zod.array(zod.string())
+}))
+
+
+/**
+ * @summary Get a public member profile
+ */
+export const getMemberPublicProfilePathUserIdMax = 255;
+
+
+
+export const GetMemberPublicProfileParams = zod.object({
+  "userId": zod.coerce.string().min(1).max(getMemberPublicProfilePathUserIdMax)
+})
+
+export const GetMemberPublicProfileResponse = zod.object({
+  "userId": zod.string(),
+  "displayName": zod.string(),
+  "badge": zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "isDefault": zod.boolean(),
+  "isSelectable": zod.boolean()
+}),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary List member roles for the owner
+ */
+export const GetMemberRolesResponseItem = zod.object({
+  "userId": zod.string(),
+  "displayName": zod.string(),
+  "badge": zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "isDefault": zod.boolean(),
+  "isSelectable": zod.boolean()
+}),
+  "role": zod.enum(['member', 'moderator', 'admin', 'owner'])
+})
+export const GetMemberRolesResponse = zod.array(GetMemberRolesResponseItem)
+
+
+/**
+ * @summary Assign or revoke an admin or moderator role
+ */
+export const updateMemberRolePathUserIdMax = 255;
+
+
+
+export const UpdateMemberRoleParams = zod.object({
+  "userId": zod.coerce.string().min(1).max(updateMemberRolePathUserIdMax)
+})
+
+export const UpdateMemberRoleBody = zod.object({
+  "role": zod.enum(['member', 'moderator', 'admin'])
+})
+
+export const UpdateMemberRoleResponse = zod.object({
+  "userId": zod.string(),
+  "displayName": zod.string(),
+  "badge": zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "isDefault": zod.boolean(),
+  "isSelectable": zod.boolean()
+}),
+  "role": zod.enum(['member', 'moderator', 'admin', 'owner'])
+})
 
 
 /**
@@ -187,3 +341,5 @@ export const ReviewGameFeedbackResponse = zod.object({
   "lastName": zod.string().nullable()
 })
 })
+
+
