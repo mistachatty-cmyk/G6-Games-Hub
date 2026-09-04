@@ -8,6 +8,16 @@ export const ACTIVITY_PULSE_MINUTES = 5;
 export const LEADERBOARD_CACHE_TTL_MS = 60_000;
 export const LEADERBOARD_FUTURE_EVENT_ADAPTER_VERSION = "v1";
 
+let leaderboardCacheRevision = 0;
+
+export function invalidateLeaderboardCache(): void {
+  leaderboardCacheRevision += 1;
+}
+
+export function getLeaderboardCacheRevision(): number {
+  return leaderboardCacheRevision;
+}
+
 export type FutureLeaderboardEvent = {
   version: typeof LEADERBOARD_FUTURE_EVENT_ADAPTER_VERSION;
   source: "verified-kills" | "verified-game-sessions" | "lok-ecosystem-achievements";
@@ -55,6 +65,7 @@ export async function recordMemberActivity(userId: string, engagedMinutes = 0): 
         updatedAt: new Date(),
       },
     });
+  invalidateLeaderboardCache();
 }
 
 export function scoreEngagedMinutes(minutes: number): number {

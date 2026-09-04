@@ -1,6 +1,7 @@
 import type { AuthUser } from "@workspace/api-zod";
 import { forumActivityEventsTable, forumCategoriesTable, forumRepliesTable } from "@workspace/db";
 import { and, eq, inArray } from "drizzle-orm";
+import { invalidateLeaderboardCache } from "./leaderboard";
 
 export const FORUM_CATEGORIES = [
   {
@@ -81,7 +82,10 @@ export async function approveForumActivity(
       .update(forumActivityEventsTable)
       .set({ isApproved: false })
       .where(eq(forumActivityEventsTable.threadId, target.threadId));
-    if (!isApproved) return;
+    if (!isApproved) {
+      invalidateLeaderboardCache();
+      return;
+    }
     await db
       .update(forumActivityEventsTable)
       .set({ isApproved: true })
@@ -96,6 +100,7 @@ export async function approveForumActivity(
         .set({ isApproved: true })
         .where(inArray(forumActivityEventsTable.replyId, publishedReplies.map((reply) => reply.id)));
     }
+    invalidateLeaderboardCache();
     return;
   }
   if (target.replyId != null) {
@@ -103,6 +108,7 @@ export async function approveForumActivity(
       .update(forumActivityEventsTable)
       .set({ isApproved })
       .where(eq(forumActivityEventsTable.replyId, target.replyId));
+    invalidateLeaderboardCache();
   }
 }
 

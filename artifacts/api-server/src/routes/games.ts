@@ -21,7 +21,7 @@ import {
   REGISTERED_GAME_SLUGS,
 } from "../lib/social";
 import { isGsixOwner } from "../lib/ownership";
-import { recordMemberActivity } from "../lib/leaderboard";
+import { invalidateLeaderboardCache, recordMemberActivity } from "../lib/leaderboard";
 
 const router: IRouter = Router();
 
@@ -95,6 +95,7 @@ router.post("/games/:slug/star", async (req, res): Promise<void> => {
           eq(gameStarsTable.voterKey, voterKey),
         ),
       );
+    invalidateLeaderboardCache();
   }
   const [stats] = await getStats([params.data.slug], body.data.voterId);
   res.json(ToggleGameStarResponse.parse(stats));

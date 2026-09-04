@@ -14,7 +14,7 @@ import {
 } from "@workspace/db";
 import { and, eq, gte, inArray } from "drizzle-orm";
 import { Router, type IRouter, type Request, type Response } from "express";
-import { recordMemberActivity, LEADERBOARD_CACHE_TTL_MS, LEADERBOARD_SCORING, leaderboardWindowStart, scoreEngagedMinutes, utcActivityDate, type LeaderboardWindow } from "../lib/leaderboard";
+import { getLeaderboardCacheRevision, recordMemberActivity, LEADERBOARD_CACHE_TTL_MS, LEADERBOARD_SCORING, leaderboardWindowStart, scoreEngagedMinutes, utcActivityDate, type LeaderboardWindow } from "../lib/leaderboard";
 import { canModerate } from "../lib/forum";
 import { getBadge, getStoredRole, roleForUser } from "../lib/members";
 
@@ -47,7 +47,7 @@ type CachedLeaderboard = {
   }>;
 };
 
-const cache = new Map<LeaderboardWindow, { expiresAt: number; value: CachedLeaderboard }>();
+const cache = new Map<LeaderboardWindow, { expiresAt: number; revision: number; value: CachedLeaderboard }>();
 
 function moderatorOnly(req: Request, res: Response): boolean {
   if (!req.isAuthenticated()) {
@@ -186,14 +186,14 @@ async function buildLeaderboard(window: LeaderboardWindow): Promise<CachedLeader
     previousScore = entry.score;
     previousRank = entry.rank;
   });
-  return { generatedAt: new Date(), entries: entries.slice(0, MAX_ENTRIES) };
+  return { generatedAt: new Date(), entries };
 }
 
 async function getCachedLeaderboard(window: LeaderboardWindow) {
   const current = cache.get(window);
-  if (current && current.expiresAt > Date.now()) return current.value;
+  if (current && current.expiresAt > Date.now() && current.revision === getLeaderboardCacheRevision()) return current.value;
   const value = await buildLeaderboard(window);
-  cache.set(window, { value, expiresAt: Date.now() + LEADERBOARD_CACHE_TTL_MS });
+  cache.set(window, { value, revision: getLeaderboardCacheRevision(), expiresAt: Date.now() + LEADERBOARD_CACHE_TTL_MS });
   return value;
 }
 
