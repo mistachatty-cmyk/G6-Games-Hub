@@ -61,6 +61,8 @@
 }
 
 * { box-sizing: border-box; }
+.scrollbar-picker { display: inline-flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.scrollbar-picker .text-button[aria-pressed='true'] { color: hsl(var(--primary)); }
 /* Low-profile scrollbar, tinted from the theme. <html data-scrollbar="hidden|standard"> opts out. */
 * { scrollbar-width: thin; scrollbar-color: hsl(var(--primary) / .35) transparent; }
 :root[data-scrollbar='standard'] * { scrollbar-width: auto; scrollbar-color: auto; }

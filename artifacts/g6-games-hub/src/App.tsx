@@ -184,8 +184,26 @@ function Navigation() {
   );
 }
 
+const SCROLLBAR_KEY = 'g6.scrollbar';
+const SCROLLBAR_STYLES = ['slim', 'hidden', 'standard'] as const;
+type ScrollbarStyle = (typeof SCROLLBAR_STYLES)[number];
+
+function readScrollbarStyle(): ScrollbarStyle {
+  try {
+    const saved = window.localStorage.getItem(SCROLLBAR_KEY) as ScrollbarStyle | null;
+    if (saved && SCROLLBAR_STYLES.includes(saved)) return saved;
+  } catch {}
+  return 'slim';
+}
+
+function ScrollbarPicker() {
+  const [style, setStyle] = useState<ScrollbarStyle>(readScrollbarStyle);
+  useEffect(() => { document.documentElement.setAttribute('data-scrollbar', style); }, [style]);
+  return <span className="scrollbar-picker" role="group" aria-label="Scrollbar">SCROLLBAR {SCROLLBAR_STYLES.map((s) => <button key={s} type="button" className="text-button" aria-pressed={style === s} onClick={() => { setStyle(s); try { window.localStorage.setItem(SCROLLBAR_KEY, s); } catch {} }}>{s.toUpperCase()}</button>)}</span>;
+}
+
 function Footer() {
-  return <footer className="footer"><div className="container-g6 footer-inner"><span>GSIX NETWORK / CHAPTER 0</span><span>DISCOVER WHAT'S GRAND <span className="text-aqua">·</span> LOCAL:200</span></div></footer>;
+  return <footer className="footer"><div className="container-g6 footer-inner"><span>GSIX NETWORK / CHAPTER 0</span><ScrollbarPicker /><span>DISCOVER WHAT'S GRAND <span className="text-aqua">·</span> LOCAL:200</span></div></footer>;
 }
 
 function Shell({ children }: { children: React.ReactNode }) {
