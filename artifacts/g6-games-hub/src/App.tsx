@@ -300,6 +300,73 @@ function GameAdLayout({ game, stageRef, isFocused, toggleFocus, install, showGui
   installPlatform: InstallPlatform;
   setInstallPlatform: React.Dispatch<React.SetStateAction<InstallPlatform>>;
 }) {
+  const auth = useAuth();
+  const gameFrameRef = useRef<HTMLIFrameElement>(null);
+  const wasAuthenticatedRef = useRef(auth.isAuthenticated);
+  const modelSettingsChannel = 'gsix.kinetic-souls.settings.v1';
+  const modelStyles = ['block', 'classic', 'hd', 'sabre'] as const;
+  useEffect(() => {
+    if (game.slug !== 'kinetic-souls-2-alpha') return;
+    const gameOrigin = new URL(game.url).origin;
+    const reply = (origin: string, type: string, fields: Record<string, unknown> = {}) => {
+      gameFrameRef.current?.contentWindow?.postMessage({ channel: modelSettingsChannel, type, ...fields }, origin);
+    };
+    const onMessage = async (event: MessageEvent) => {
+      if (event.origin !== gameOrigin || event.source !== gameFrameRef.current?.contentWindow) return;
+      const message = event.data;
+      if (!message || message.channel !== modelSettingsChannel || typeof message.type !== 'string') return;
+      if (message.type === 'hello') {
+        reply(event.origin, 'ready');
+        return;
+      }
+      if (message.type === 'load') {
+        try {
+          const response = await fetch('/api/games/kinetic-souls-2-alpha/settings', { credentials: 'include' });
+          if (response.status === 401) {
+            reply(event.origin, 'loaded', { modelStyle: null, signedIn: false });
+            return;
+          }
+          if (!response.ok) throw new Error('Could not load saved model setting');
+          const account = await response.json() as { modelStyle?: unknown };
+          if (typeof account.modelStyle === 'string' && modelStyles.includes(account.modelStyle as typeof modelStyles[number])) {
+            reply(event.origin, 'loaded', { modelStyle: account.modelStyle, signedIn: true });
+            return;
+          }
+          const localStyle = typeof message.localModelStyle === 'string' && modelStyles.includes(message.localModelStyle as typeof modelStyles[number])
+            ? message.localModelStyle
+            : 'hd';
+          const saveResponse = await fetch('/api/games/kinetic-souls-2-alpha/settings', {
+            method: 'PUT',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ modelStyle: localStyle }),
+          });
+          if (!saveResponse.ok) throw new Error('Could not save initial model setting');
+          const saved = await saveResponse.json() as { modelStyle?: unknown };
+          const modelStyle = typeof saved.modelStyle === 'string' && modelStyles.includes(saved.modelStyle as typeof modelStyles[number])
+            ? saved.modelStyle
+            : localStyle;
+          reply(event.origin, 'loaded', { modelStyle, signedIn: true });
+        } catch {
+          reply(event.origin, 'loaded', { modelStyle: null, signedIn: true, syncFailed: true });
+        }
+        return;
+      }
+      if (message.type === 'save' && typeof message.modelStyle === 'string' && modelStyles.includes(message.modelStyle as typeof modelStyles[number])) {
+        await fetch('/api/games/kinetic-souls-2-alpha/settings', {
+          method: 'PUT',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ modelStyle: message.modelStyle }),
+        }).catch(() => undefined);
+      }
+    };
+    window.addEventListener('message', onMessage);
+    if (auth.isAuthenticated && !wasAuthenticatedRef.current) reply(gameOrigin, 'ready');
+    wasAuthenticatedRef.current = auth.isAuthenticated;
+    return () => window.removeEventListener('message', onMessage);
+  }, [game.slug, game.url, auth.isAuthenticated]);
+
   return (
     <section className="container-g6" id="launch">
       <AdSlot label="top rail" slot={adsenseSlots.top} className="top-ad-slot" />
@@ -337,7 +404,7 @@ function GameAdLayout({ game, stageRef, isFocused, toggleFocus, install, showGui
                 <a href={game.url} target="_blank" rel="noreferrer" className="text-aqua">Open in new tab <ExternalLink size={12} style={{ verticalAlign: 'middle' }} /></a>
               </div>
             </div>
-            <iframe className="game-frame" src={game.url} title={`${game.title} playable game`} allow="fullscreen; autoplay; gamepad" />
+            <iframe ref={gameFrameRef} className="game-frame" src={game.url} title={`${game.title} playable game`} allow="fullscreen; autoplay; gamepad" />
           </div>
           <AdSlot label="below game" slot={adsenseSlots.bottom} className="bottom-ad-slot" />
         </div>
