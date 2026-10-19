@@ -944,6 +944,53 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/GameSocialStats"
+  /games/kinetic-souls-2-alpha/settings:
+    get:
+      operationId: getKineticSoulsSettings
+      tags: [games]
+      summary: Get the signed-in player's Kinetic Souls 2 model preference
+      responses:
+        "200":
+          description: Saved fighter model style, or null when no preference has been saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KineticSoulsSettings"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    put:
+      operationId: updateKineticSoulsSettings
+      tags: [games]
+      summary: Save the signed-in player's Kinetic Souls 2 model preference
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KineticSoulsSettingsInput"
+      responses:
+        "200":
+          description: Saved fighter model style
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KineticSoulsSettings"
+        "400":
+          description: Invalid fighter model style
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /games/{slug}/star:
     post:
       operationId: toggleGameStar
@@ -1146,6 +1193,23 @@ components:
           items:
             $ref: "#/components/schemas/AuthProviderOption"
       required: [providers]
+    KineticSoulsModelStyle:
+      type: string
+      enum: [block, classic, hd, sabre]
+    KineticSoulsSettings:
+      type: object
+      properties:
+        modelStyle:
+          anyOf:
+            - $ref: "#/components/schemas/KineticSoulsModelStyle"
+            - type: "null"
+      required: [modelStyle]
+    KineticSoulsSettingsInput:
+      type: object
+      properties:
+        modelStyle:
+          $ref: "#/components/schemas/KineticSoulsModelStyle"
+      required: [modelStyle]
     LeaderboardMetric:
       type: object
       properties:

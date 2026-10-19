@@ -39,5 +39,26 @@ export const feedbackTable = pgTable(
   ],
 );
 
+export const kineticSoulsSettingsTable = pgTable(
+  "kinetic_souls_settings",
+  {
+    userId: varchar("user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    gameSlug: varchar("game_slug", { length: 120 }).notNull(),
+    modelStyle: varchar("model_style", { length: 16 }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    uniqueIndex("kinetic_souls_settings_user_game_idx").on(table.userId, table.gameSlug),
+    index("kinetic_souls_settings_game_slug_idx").on(table.gameSlug),
+  ],
+);
+
 export type GameStar = typeof gameStarsTable.$inferSelect;
 export type Feedback = typeof feedbackTable.$inferSelect;
+export type KineticSoulsSettings = typeof kineticSoulsSettingsTable.$inferSelect;
