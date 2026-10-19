@@ -5,6 +5,7 @@ import gamesRouter from "./games";
 import membersRouter from "./members";
 import forumRouter from "./forum";
 import leaderboardRouter from "./leaderboard";
+import kineticSoulsSettingsRouter from "./kinetic-souls-settings";
 
 const router: IRouter = Router();
 
@@ -14,5 +15,6 @@ router.use(gamesRouter);
 router.use(membersRouter);
 router.use(forumRouter);
 router.use(leaderboardRouter);
+router.use(kineticSoulsSettingsRouter);
 
 export default router;

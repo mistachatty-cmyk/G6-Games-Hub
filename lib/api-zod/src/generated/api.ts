@@ -1131,6 +1131,26 @@ export const GetGameSocialStatsResponse = zod.array(GetGameSocialStatsResponseIt
 
 
 /**
+ * @summary Get the signed-in player's Kinetic Souls 2 model preference
+ */
+export const GetKineticSoulsSettingsResponse = zod.object({
+  "modelStyle": zod.union([zod.enum(['block', 'classic', 'hd', 'sabre']),zod.null()])
+})
+
+
+/**
+ * @summary Save the signed-in player's Kinetic Souls 2 model preference
+ */
+export const UpdateKineticSoulsSettingsBody = zod.object({
+  "modelStyle": zod.enum(['block', 'classic', 'hd', 'sabre'])
+})
+
+export const UpdateKineticSoulsSettingsResponse = zod.object({
+  "modelStyle": zod.union([zod.enum(['block', 'classic', 'hd', 'sabre']),zod.null()])
+})
+
+
+/**
  * @summary Star or unstar a game for this browser
  */
 export const toggleGameStarPathSlugMax = 120;

@@ -56,6 +56,24 @@ export interface AuthProviders {
   providers: AuthProviderOption[];
 }
 
+export type KineticSoulsModelStyle = typeof KineticSoulsModelStyle[keyof typeof KineticSoulsModelStyle];
+
+
+export const KineticSoulsModelStyle = {
+  block: 'block',
+  classic: 'classic',
+  hd: 'hd',
+  sabre: 'sabre',
+} as const;
+
+export interface KineticSoulsSettings {
+  modelStyle: KineticSoulsModelStyle | null;
+}
+
+export interface KineticSoulsSettingsInput {
+  modelStyle: KineticSoulsModelStyle;
+}
+
 export interface LeaderboardMetric {
   key: string;
   label: string;

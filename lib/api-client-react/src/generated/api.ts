@@ -49,6 +49,8 @@ import type {
   GetGameSocialStatsParams,
   GetLeaderboardParams,
   HealthStatus,
+  KineticSoulsSettings,
+  KineticSoulsSettingsInput,
   LeaderboardActivityInput,
   LeaderboardActivityReceipt,
   LeaderboardDiagnostics,
@@ -2373,6 +2375,154 @@ export function useGetGameSocialStats<TData = Awaited<ReturnType<typeof getGameS
 
 
 
+
+export const getGetKineticSoulsSettingsUrl = () => {
+
+
+
+
+  return `/api/games/kinetic-souls-2-alpha/settings`
+}
+
+/**
+ * @summary Get the signed-in player's Kinetic Souls 2 model preference
+ */
+export const getKineticSoulsSettings = async ( options?: Parameters<typeof customFetch>[1]): Promise<KineticSoulsSettings> => {
+
+  return customFetch<KineticSoulsSettings>(getGetKineticSoulsSettingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetKineticSoulsSettingsQueryKey = () => {
+    return [
+    `/api/games/kinetic-souls-2-alpha/settings`
+    ] as const;
+    }
+
+
+export const getGetKineticSoulsSettingsQueryOptions = <TData = Awaited<ReturnType<typeof getKineticSoulsSettings>>, TError = ErrorType<Error>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getKineticSoulsSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetKineticSoulsSettingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getKineticSoulsSettings>>> = ({ signal }) => getKineticSoulsSettings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getKineticSoulsSettings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetKineticSoulsSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getKineticSoulsSettings>>>
+export type GetKineticSoulsSettingsQueryError = ErrorType<Error>
+
+
+/**
+ * @summary Get the signed-in player's Kinetic Souls 2 model preference
+ */
+
+export function useGetKineticSoulsSettings<TData = Awaited<ReturnType<typeof getKineticSoulsSettings>>, TError = ErrorType<Error>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getKineticSoulsSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetKineticSoulsSettingsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateKineticSoulsSettingsUrl = () => {
+
+
+
+
+  return `/api/games/kinetic-souls-2-alpha/settings`
+}
+
+/**
+ * @summary Save the signed-in player's Kinetic Souls 2 model preference
+ */
+export const updateKineticSoulsSettings = async (kineticSoulsSettingsInput: KineticSoulsSettingsInput, options?: Parameters<typeof customFetch>[1]): Promise<KineticSoulsSettings> => {
+
+  return customFetch<KineticSoulsSettings>(getUpdateKineticSoulsSettingsUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(kineticSoulsSettingsInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateKineticSoulsSettingsMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateKineticSoulsSettings>>, TError,{data: BodyType<KineticSoulsSettingsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateKineticSoulsSettings>>, TError,{data: BodyType<KineticSoulsSettingsInput>}, TContext> => {
+
+const mutationKey = ['updateKineticSoulsSettings'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateKineticSoulsSettings>>, {data: BodyType<KineticSoulsSettingsInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateKineticSoulsSettings(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateKineticSoulsSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof updateKineticSoulsSettings>>>
+    export type UpdateKineticSoulsSettingsMutationBody = BodyType<KineticSoulsSettingsInput>
+    export type UpdateKineticSoulsSettingsMutationError = ErrorType<Error>
+
+    /**
+ * @summary Save the signed-in player's Kinetic Souls 2 model preference
+ */
+export const useUpdateKineticSoulsSettings = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateKineticSoulsSettings>>, TError,{data: BodyType<KineticSoulsSettingsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateKineticSoulsSettings>>,
+        TError,
+        {data: BodyType<KineticSoulsSettingsInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateKineticSoulsSettingsMutationOptions(options));
+    }
 
 export const getToggleGameStarUrl = (slug: string,) => {
 
