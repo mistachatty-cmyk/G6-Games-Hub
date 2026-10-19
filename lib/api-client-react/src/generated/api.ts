@@ -47,8 +47,13 @@ import type {
   GameStarInput,
   GetForumThreadDetailParams,
   GetGameSocialStatsParams,
+  GetKineticSoulsLeaderboardParams,
   GetLeaderboardParams,
   HealthStatus,
+  KineticSoulsLeaderboard,
+  KineticSoulsMatchResultInput,
+  KineticSoulsMatchResultReceipt,
+  KineticSoulsProgress,
   KineticSoulsSettings,
   KineticSoulsSettingsInput,
   LeaderboardActivityInput,
@@ -2523,6 +2528,240 @@ export const useUpdateKineticSoulsSettings = <TError = ErrorType<Error>,
       > => {
       return useMutation(getUpdateKineticSoulsSettingsMutationOptions(options));
     }
+
+export const getSubmitKineticSoulsMatchResultUrl = () => {
+
+
+
+
+  return `/api/games/kinetic-souls-2-alpha/results`
+}
+
+/**
+ * Results are client-reported and are not used for rewards.
+ * @summary Submit a casual Kinetic Souls match result
+ */
+export const submitKineticSoulsMatchResult = async (kineticSoulsMatchResultInput: KineticSoulsMatchResultInput, options?: Parameters<typeof customFetch>[1]): Promise<KineticSoulsMatchResultReceipt> => {
+
+  return customFetch<KineticSoulsMatchResultReceipt>(getSubmitKineticSoulsMatchResultUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(kineticSoulsMatchResultInput)
+  }
+);}
+
+
+
+
+
+export const getSubmitKineticSoulsMatchResultMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitKineticSoulsMatchResult>>, TError,{data: BodyType<KineticSoulsMatchResultInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof submitKineticSoulsMatchResult>>, TError,{data: BodyType<KineticSoulsMatchResultInput>}, TContext> => {
+
+const mutationKey = ['submitKineticSoulsMatchResult'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof submitKineticSoulsMatchResult>>, {data: BodyType<KineticSoulsMatchResultInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  submitKineticSoulsMatchResult(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SubmitKineticSoulsMatchResultMutationResult = NonNullable<Awaited<ReturnType<typeof submitKineticSoulsMatchResult>>>
+    export type SubmitKineticSoulsMatchResultMutationBody = BodyType<KineticSoulsMatchResultInput>
+    export type SubmitKineticSoulsMatchResultMutationError = ErrorType<Error>
+
+    /**
+ * @summary Submit a casual Kinetic Souls match result
+ */
+export const useSubmitKineticSoulsMatchResult = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitKineticSoulsMatchResult>>, TError,{data: BodyType<KineticSoulsMatchResultInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof submitKineticSoulsMatchResult>>,
+        TError,
+        {data: BodyType<KineticSoulsMatchResultInput>},
+        TContext
+      > => {
+      return useMutation(getSubmitKineticSoulsMatchResultMutationOptions(options));
+    }
+
+export const getGetKineticSoulsLeaderboardUrl = (params?: GetKineticSoulsLeaderboardParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/games/kinetic-souls-2-alpha/leaderboard?${stringifiedParams}` : `/api/games/kinetic-souls-2-alpha/leaderboard`
+}
+
+/**
+ * Results are client-reported and are not used for rewards.
+ * @summary Get casual Kinetic Souls match records
+ */
+export const getKineticSoulsLeaderboard = async (params?: GetKineticSoulsLeaderboardParams, options?: Parameters<typeof customFetch>[1]): Promise<KineticSoulsLeaderboard> => {
+
+  return customFetch<KineticSoulsLeaderboard>(getGetKineticSoulsLeaderboardUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetKineticSoulsLeaderboardQueryKey = (params?: GetKineticSoulsLeaderboardParams,) => {
+    return [
+    `/api/games/kinetic-souls-2-alpha/leaderboard`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetKineticSoulsLeaderboardQueryOptions = <TData = Awaited<ReturnType<typeof getKineticSoulsLeaderboard>>, TError = ErrorType<Error>>(params?: GetKineticSoulsLeaderboardParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getKineticSoulsLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetKineticSoulsLeaderboardQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getKineticSoulsLeaderboard>>> = ({ signal }) => getKineticSoulsLeaderboard(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getKineticSoulsLeaderboard>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetKineticSoulsLeaderboardQueryResult = NonNullable<Awaited<ReturnType<typeof getKineticSoulsLeaderboard>>>
+export type GetKineticSoulsLeaderboardQueryError = ErrorType<Error>
+
+
+/**
+ * @summary Get casual Kinetic Souls match records
+ */
+
+export function useGetKineticSoulsLeaderboard<TData = Awaited<ReturnType<typeof getKineticSoulsLeaderboard>>, TError = ErrorType<Error>>(
+ params?: GetKineticSoulsLeaderboardParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getKineticSoulsLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetKineticSoulsLeaderboardQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetKineticSoulsProgressUrl = () => {
+
+
+
+
+  return `/api/games/kinetic-souls-2-alpha/progress`
+}
+
+/**
+ * @summary Get the signed-in player's Kinetic Souls 2 milestones
+ */
+export const getKineticSoulsProgress = async ( options?: Parameters<typeof customFetch>[1]): Promise<KineticSoulsProgress> => {
+
+  return customFetch<KineticSoulsProgress>(getGetKineticSoulsProgressUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetKineticSoulsProgressQueryKey = () => {
+    return [
+    `/api/games/kinetic-souls-2-alpha/progress`
+    ] as const;
+    }
+
+
+export const getGetKineticSoulsProgressQueryOptions = <TData = Awaited<ReturnType<typeof getKineticSoulsProgress>>, TError = ErrorType<Error>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getKineticSoulsProgress>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetKineticSoulsProgressQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getKineticSoulsProgress>>> = ({ signal }) => getKineticSoulsProgress({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getKineticSoulsProgress>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetKineticSoulsProgressQueryResult = NonNullable<Awaited<ReturnType<typeof getKineticSoulsProgress>>>
+export type GetKineticSoulsProgressQueryError = ErrorType<Error>
+
+
+/**
+ * @summary Get the signed-in player's Kinetic Souls 2 milestones
+ */
+
+export function useGetKineticSoulsProgress<TData = Awaited<ReturnType<typeof getKineticSoulsProgress>>, TError = ErrorType<Error>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getKineticSoulsProgress>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetKineticSoulsProgressQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getToggleGameStarUrl = (slug: string,) => {
 
