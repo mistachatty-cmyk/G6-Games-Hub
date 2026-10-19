@@ -59,6 +59,28 @@ export const kineticSoulsSettingsTable = pgTable(
   ],
 );
 
+export const kineticSoulsMatchResultsTable = pgTable(
+  "kinetic_souls_match_results",
+  {
+    id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
+    userId: varchar("user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    gameSlug: varchar("game_slug", { length: 120 }).notNull(),
+    sessionId: varchar("session_id", { length: 36 }).notNull(),
+    mode: varchar("mode", { length: 24 }).notNull(),
+    durationSeconds: integer("duration_seconds").notNull(),
+    score: integer("score").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("kinetic_souls_results_user_game_session_idx").on(table.userId, table.gameSlug, table.sessionId),
+    index("kinetic_souls_results_game_mode_score_idx").on(table.gameSlug, table.mode, table.score),
+    index("kinetic_souls_results_game_mode_created_idx").on(table.gameSlug, table.mode, table.createdAt),
+  ],
+);
+
 export type GameStar = typeof gameStarsTable.$inferSelect;
 export type Feedback = typeof feedbackTable.$inferSelect;
 export type KineticSoulsSettings = typeof kineticSoulsSettingsTable.$inferSelect;
+export type KineticSoulsMatchResult = typeof kineticSoulsMatchResultsTable.$inferSelect;
