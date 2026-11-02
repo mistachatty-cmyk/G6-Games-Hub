@@ -289,6 +289,18 @@ function GameHero({ game, onShare, stat, onToggleStar, pending }: { game: Game; 
   return <section className={`detail-hero ${game.accent}`}><div className="container-g6 detail-layout"><div><span className="eyebrow">{game.number} / {game.signal}</span><h1>{game.title.split(' ')[0]}<br /><em>{game.title.split(' ').slice(1).join(' ')}</em></h1><p className="detail-summary">{game.long}</p><div className="hero-ctas"><a href="#launch" className="button-primary">Launch game <ExternalLink size={14} /></a><button className="button-secondary" onClick={onShare}><Share2 size={14} /> Share this door</button><StarButton stat={stat} onToggle={onToggleStar} pending={pending} /></div><p className="social-caption">One star per browser. Feedback stays private.</p></div><div className="detail-meta"><div><span>Type</span><strong>{game.category}</strong></div><div><span>Signal</span><strong className="text-aqua">Online / open</strong></div><div><span>Best with</span><strong>Headphones optional</strong></div></div></div></section>;
 }
 
+type KineticFrameRequest =
+  | { channel: 'gsix.kinetic-souls.settings.v1'; type: 'hello' }
+  | { channel: 'gsix.kinetic-souls.settings.v1'; type: 'load'; localModelStyle?: unknown; pendingModelStyle?: unknown }
+  | { channel: 'gsix.kinetic-souls.settings.v1'; type: 'save'; modelStyle?: unknown }
+  | { channel: 'gsix.kinetic-souls.settings.v1'; type: 'result'; result?: unknown };
+type KineticFrameResponseType = 'ready' | 'loaded' | 'saved' | 'save_failed' | 'result_saved' | 'result_failed';
+function isKineticFrameRequest(value: unknown): value is KineticFrameRequest {
+  if (!value || typeof value !== 'object') return false;
+  const message = value as Record<string, unknown>;
+  return message.channel === 'gsix.kinetic-souls.settings.v1' && ['hello', 'load', 'save', 'result'].includes(String(message.type));
+}
+
 function GameAdLayout({ game, stageRef, isFocused, toggleFocus, install, showGuide, setShowGuide, installPlatform, setInstallPlatform }: {
   game: Game;
   stageRef: React.RefObject<HTMLDivElement | null>;
@@ -305,31 +317,52 @@ function GameAdLayout({ game, stageRef, isFocused, toggleFocus, install, showGui
   const wasAuthenticatedRef = useRef(auth.isAuthenticated);
   const modelSettingsChannel = 'gsix.kinetic-souls.settings.v1';
   const modelStyles = ['block', 'classic', 'hd', 'sabre'] as const;
+  const loadInProgressRef = useRef(false);
+  const resultRequestsRef = useRef(new Set<string>());
   useEffect(() => {
     if (game.slug !== 'kinetic-souls-2-alpha') return;
     const gameOrigin = new URL(game.url).origin;
-    const reply = (origin: string, type: string, fields: Record<string, unknown> = {}) => {
+    const reply = (origin: string, type: KineticFrameResponseType, fields: Record<string, unknown> = {}) => {
       gameFrameRef.current?.contentWindow?.postMessage({ channel: modelSettingsChannel, type, ...fields }, origin);
     };
     const onMessage = async (event: MessageEvent) => {
       if (event.origin !== gameOrigin || event.source !== gameFrameRef.current?.contentWindow) return;
+      if (!isKineticFrameRequest(event.data)) return;
       const message = event.data;
-      if (!message || message.channel !== modelSettingsChannel || typeof message.type !== 'string') return;
       if (message.type === 'hello') {
         reply(event.origin, 'ready');
         return;
       }
       if (message.type === 'load') {
+        if (loadInProgressRef.current) return;
+        loadInProgressRef.current = true;
         try {
           const response = await fetch('/api/games/kinetic-souls-2-alpha/settings', { credentials: 'include' });
           if (response.status === 401) {
             reply(event.origin, 'loaded', { modelStyle: null, signedIn: false });
+            loadInProgressRef.current = false;
             return;
           }
           if (!response.ok) throw new Error('Could not load saved model setting');
           const account = await response.json() as { modelStyle?: unknown };
+          const pendingStyle = typeof message.pendingModelStyle === 'string' && modelStyles.includes(message.pendingModelStyle as typeof modelStyles[number])
+            ? message.pendingModelStyle as typeof modelStyles[number]
+            : null;
+          if (pendingStyle) {
+            const saveResponse = await fetch('/api/games/kinetic-souls-2-alpha/settings', {
+              method: 'PUT',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ modelStyle: pendingStyle }),
+            });
+            if (!saveResponse.ok) throw new Error('Could not retry saved model setting');
+            reply(event.origin, 'loaded', { modelStyle: pendingStyle, signedIn: true, savedPending: true });
+            loadInProgressRef.current = false;
+            return;
+          }
           if (typeof account.modelStyle === 'string' && modelStyles.includes(account.modelStyle as typeof modelStyles[number])) {
             reply(event.origin, 'loaded', { modelStyle: account.modelStyle, signedIn: true });
+            loadInProgressRef.current = false;
             return;
           }
           const localStyle = typeof message.localModelStyle === 'string' && modelStyles.includes(message.localModelStyle as typeof modelStyles[number])
@@ -347,18 +380,49 @@ function GameAdLayout({ game, stageRef, isFocused, toggleFocus, install, showGui
             ? saved.modelStyle
             : localStyle;
           reply(event.origin, 'loaded', { modelStyle, signedIn: true });
+          loadInProgressRef.current = false;
         } catch {
           reply(event.origin, 'loaded', { modelStyle: null, signedIn: true, syncFailed: true });
+          loadInProgressRef.current = false;
         }
         return;
       }
       if (message.type === 'save' && typeof message.modelStyle === 'string' && modelStyles.includes(message.modelStyle as typeof modelStyles[number])) {
-        await fetch('/api/games/kinetic-souls-2-alpha/settings', {
-          method: 'PUT',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ modelStyle: message.modelStyle }),
-        }).catch(() => undefined);
+        try {
+          const response = await fetch('/api/games/kinetic-souls-2-alpha/settings', {
+            method: 'PUT',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ modelStyle: message.modelStyle }),
+          });
+          if (!response.ok) throw new Error('Could not save model setting');
+          reply(event.origin, 'saved', { modelStyle: message.modelStyle });
+        } catch {
+          reply(event.origin, 'save_failed', { modelStyle: message.modelStyle });
+        }
+      }
+      if (message.type === 'result') {
+        const result = message.result as Record<string, unknown> | null;
+        if (!result || result.version !== 1 || typeof result.sessionId !== 'string' ||
+          !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(result.sessionId) ||
+          !['timer', 'score', 'horde', 'infection', 'unlimited', 'boss_rush'].includes(String(result.mode)) ||
+          !Number.isInteger(result.durationSeconds) || Number(result.durationSeconds) < 5 || Number(result.durationSeconds) > 3600 ||
+          !Number.isInteger(result.score) || Number(result.score) < 0 || Number(result.score) > 1_000_000) return;
+        if (resultRequestsRef.current.has(result.sessionId)) return;
+        resultRequestsRef.current.add(result.sessionId);
+        try {
+          const response = await fetch('/api/games/kinetic-souls-2-alpha/results', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(result),
+          });
+          if (!response.ok) throw new Error('Could not save match result');
+          reply(event.origin, 'result_saved', await response.json() as Record<string, unknown>);
+        } catch {
+          resultRequestsRef.current.delete(result.sessionId);
+          reply(event.origin, 'result_failed');
+        }
       }
     };
     window.addEventListener('message', onMessage);
@@ -482,10 +546,63 @@ function GameDetail() {
     if (navigator.share) await navigator.share(data).catch(() => undefined);
     else await navigator.clipboard?.writeText(window.location.href);
   };
-  return <Shell><main id="main-content"><GameHero game={game} onShare={share} stat={social.getStat(game.slug)} onToggleStar={() => social.toggleStar(game.slug, !social.getStat(game.slug)?.starred)} pending={social.starMutation.isPending} /><GameAdLayout game={game} stageRef={stageRef} isFocused={isFocused} toggleFocus={toggleFocus} install={install} showGuide={showGuide} setShowGuide={setShowGuide} installPlatform={installPlatform} setInstallPlatform={setInstallPlatform} /><FeedbackPanel game={game} /></main></Shell>;
+  return <Shell><main id="main-content"><GameHero game={game} onShare={share} stat={social.getStat(game.slug)} onToggleStar={() => social.toggleStar(game.slug, !social.getStat(game.slug)?.starred)} pending={social.starMutation.isPending} /><GameAdLayout game={game} stageRef={stageRef} isFocused={isFocused} toggleFocus={toggleFocus} install={install} showGuide={showGuide} setShowGuide={setShowGuide} installPlatform={installPlatform} setInstallPlatform={setInstallPlatform} />{game.slug === 'kinetic-souls-2-alpha' && <KineticSoulsLeaderboard key={game.slug} />}<FeedbackPanel game={game} /></main></Shell>;
   /*
   return <Shell><main><section className={`detail-hero ${game.accent}`}><div className="container-g6 detail-layout"><div><span className="eyebrow">{game.number} / {game.signal}</span><h1>{game.title.split(' ')[0]}<br /><em>{game.title.split(' ').slice(1).join(' ')}</em></h1><p className="detail-summary">{game.long}</p><div className="hero-ctas"><a href="#launch" className="button-primary">Launch game <ExternalLink size={14} /></a><button className="button-secondary" onClick={share}><Share2 size={14} /> Share this door</button></div></div><div className="detail-meta"><div><span>Type</span><strong>{game.category}</strong></div><div><span>Signal</span><strong className="text-aqua">Online / open</strong></div><div><span>Best with</span><strong>Headphones optional</strong></div></div></div></section><section className="container-g6" id="launch"><div className="ad-slot">Ad placement / top rail / 970 × 90</div><div className="play-tools" aria-label="Game controls"><button className="button-secondary" onClick={toggleFocus}>{isFocused ? 'Exit focus mode' : 'Focus play'} <ExternalLink size={14} /></button><button className="button-secondary" onClick={install}>Add to Home Screen <Plus size={14} /></button><button className="text-button" onClick={() => setShowGuide((current) => !current)} aria-expanded={showGuide}>{showGuide ? 'Hide play notes' : 'Play notes'} <ChevronDown size={13} /></button></div>{showGuide && <div className="play-guide"><div><span className="eyebrow">Quick tutorial</span><h2>Keep the door open.</h2><p>Focus play expands the game without reloading it. When you are done, use the exit control or your browser’s back-to-window gesture.</p></div><div className="install-help"><div className="install-tabs" role="tablist" aria-label="Home screen instructions"><button className={installPlatform === 'apple' ? 'active' : ''} onClick={() => setInstallPlatform('apple')} role="tab" aria-selected={installPlatform === 'apple'}>iPhone / iPad</button><button className={installPlatform === 'android' ? 'active' : ''} onClick={() => setInstallPlatform('android')} role="tab" aria-selected={installPlatform === 'android'}>Android</button></div>{installPlatform === 'apple' ? <p><strong>1.</strong> Tap Share in Safari. <strong>2.</strong> Choose <em>Add to Home Screen</em>. <strong>3.</strong> Tap Add, then open GSix from the new icon.</p> : <p><strong>1.</strong> Open your browser menu. <strong>2.</strong> Choose <em>Install app</em> or <em>Add to Home screen</em>. <strong>3.</strong> Confirm, then return here from the GSix icon.</p>}</div></div>}<div ref={stageRef} className={`launch-stage ${isFocused ? 'focused' : ''}`}><div className="launch-header"><span><i className="live-dot" /> {game.title} / live transmission</span><div className="launch-actions"><button className="stage-control" onClick={toggleFocus}>{isFocused ? 'Exit focus' : 'Focus play'} <ExternalLink size={12} /></button><a href={game.url} target="_blank" rel="noreferrer" className="text-aqua">Open in new tab <ExternalLink size={12} style={{ verticalAlign: 'middle' }} /></a></div></div><iframe className="game-frame" src={game.url} title={`${game.title} playable game`} allow="fullscreen; autoplay; gamepad" /></div><div className="detail-lower"><div className="info-panel"><h3>Before you enter</h3><p>Give it a minute. These are short-form worlds built around atmosphere, surprise, and a little patience.</p></div><div className="info-panel"><h3>Keep the signal alive</h3><p>Found something worth sharing? Send this door to somebody who likes finding the good stuff first.</p></div></div></section></main></Shell>;
 */
+}
+
+const kineticModes = ['score', 'timer', 'horde', 'infection', 'unlimited', 'boss_rush'] as const;
+type KineticMode = typeof kineticModes[number];
+type KineticLeaderboardEntry = { rank: number; displayName: string; badgeName: string; bestScore: number; matches: number };
+type KineticAchievement = { id: string; title: string; description: string; unlocked: boolean };
+function KineticSoulsLeaderboard() {
+  const auth = useAuth();
+  const [mode, setMode] = useState<KineticMode>('score');
+  const [entries, setEntries] = useState<KineticLeaderboardEntry[]>([]);
+  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [milestones, setMilestones] = useState<{ matches: number; bestScore: number; achievements: KineticAchievement[] } | null>(null);
+  const [progressStatus, setProgressStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  useEffect(() => {
+    const controller = new AbortController();
+    setStatus('loading');
+    fetch(`/api/games/kinetic-souls-2-alpha/leaderboard?mode=${mode}`, { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Leaderboard unavailable');
+        const payload = await response.json() as { entries?: KineticLeaderboardEntry[] };
+        setEntries(Array.isArray(payload.entries) ? payload.entries : []);
+        setStatus('ready');
+      })
+      .catch(() => { if (!controller.signal.aborted) setStatus('error'); });
+    return () => controller.abort();
+  }, [mode]);
+  useEffect(() => {
+    if (!auth.isAuthenticated) {
+      setMilestones(null);
+      setProgressStatus('ready');
+      return;
+    }
+    const controller = new AbortController();
+    setProgressStatus('loading');
+    fetch('/api/games/kinetic-souls-2-alpha/progress', { credentials: 'include', signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Progress unavailable');
+        setMilestones(await response.json());
+        setProgressStatus('ready');
+      })
+      .catch(() => { if (!controller.signal.aborted) setProgressStatus('error'); });
+    return () => controller.abort();
+  }, [auth.isAuthenticated]);
+  return <section className="container-g6" aria-labelledby="kinetic-leaderboard-title"><div className="info-panel kinetic-leaderboard">
+    <span className="eyebrow">Community / Kinetic Souls 2</span><h2 id="kinetic-leaderboard-title">Casual records</h2>
+    <p>Client-reported alpha records. These are not verified rankings and do not earn rewards.</p>
+    <label className="kinetic-mode-label">Match mode<select value={mode} onChange={(event) => setMode(event.target.value as KineticMode)}>{kineticModes.map((item) => <option key={item} value={item}>{item.replace('_', ' ')}</option>)}</select></label>
+    {status === 'loading' ? <p role="status">Loading records…</p> : status === 'error' ? <p role="status">Records are temporarily unavailable.</p> : entries.length === 0 ? <p role="status">No records yet. Sign in and finish a match to add a casual record.</p> : <div className="kinetic-records" role="table" aria-label={`${mode} casual records`}>
+      <div className="kinetic-record-row kinetic-record-head" role="row"><span role="columnheader">Rank</span><span role="columnheader">Player</span><span role="columnheader">Best score</span><span role="columnheader">Matches</span></div>
+      {entries.map((entry) => <div className="kinetic-record-row" role="row" key={`${entry.rank}-${entry.displayName}`}><span role="cell">#{entry.rank}</span><span role="cell">{entry.displayName}<small>{entry.badgeName}</small></span><span role="cell">{entry.bestScore.toLocaleString()}</span><span role="cell">{entry.matches}</span></div>)}
+    </div>}
+    {auth.isAuthenticated && <div className="kinetic-milestones"><h3>Your account progress</h3><p>Milestones use client-reported alpha records and are not competitive awards.</p>{progressStatus === 'loading' ? <p role="status">Loading progress…</p> : progressStatus === 'error' ? <p role="status">Account progress is temporarily unavailable.</p> : milestones && <><p>{milestones.matches} recorded matches · best score {milestones.bestScore.toLocaleString()}</p><ul>{milestones.achievements.map((achievement) => <li key={achievement.id} className={achievement.unlocked ? 'unlocked' : ''}><span aria-hidden="true">{achievement.unlocked ? '✓' : '○'}</span><div><strong>{achievement.title}</strong><small>{achievement.description}</small></div></li>)}</ul></>}</div>}
+  </div></section>;
 }
 
 function FeedbackPanel({ game }: { game: Game }) {

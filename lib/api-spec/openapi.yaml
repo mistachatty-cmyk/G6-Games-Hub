@@ -991,6 +991,86 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /games/kinetic-souls-2-alpha/results:
+    post:
+      operationId: submitKineticSoulsMatchResult
+      tags: [games]
+      summary: Submit a casual Kinetic Souls match result
+      description: Results are client-reported and are not used for rewards.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KineticSoulsMatchResultInput"
+      responses:
+        "201":
+          description: Match result accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KineticSoulsMatchResultReceipt"
+        "200":
+          description: Duplicate match result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KineticSoulsMatchResultReceipt"
+        "400":
+          description: Invalid match result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /games/kinetic-souls-2-alpha/leaderboard:
+    get:
+      operationId: getKineticSoulsLeaderboard
+      tags: [games]
+      summary: Get casual Kinetic Souls match records
+      description: Results are client-reported and are not used for rewards.
+      parameters:
+        - name: mode
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/KineticSoulsMatchMode"
+      responses:
+        "200":
+          description: Top casual records for the selected mode
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KineticSoulsLeaderboard"
+        "400":
+          description: Unsupported match mode
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /games/kinetic-souls-2-alpha/progress:
+    get:
+      operationId: getKineticSoulsProgress
+      tags: [games]
+      summary: Get the signed-in player's Kinetic Souls 2 milestones
+      responses:
+        "200":
+          description: Account progress derived from accepted casual records
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KineticSoulsProgress"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /games/{slug}/star:
     post:
       operationId: toggleGameStar
@@ -1210,6 +1290,105 @@ components:
         modelStyle:
           $ref: "#/components/schemas/KineticSoulsModelStyle"
       required: [modelStyle]
+    KineticSoulsMatchMode:
+      type: string
+      enum: [timer, score, horde, infection, unlimited, boss_rush]
+    KineticSoulsMatchResultInput:
+      type: object
+      properties:
+        version:
+          type: integer
+          enum: [1]
+        sessionId:
+          type: string
+          pattern: "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+        mode:
+          $ref: "#/components/schemas/KineticSoulsMatchMode"
+        durationSeconds:
+          type: number
+          multipleOf: 1
+          minimum: 5
+          maximum: 3600
+        score:
+          type: number
+          multipleOf: 1
+          minimum: 0
+          maximum: 1000000
+      required: [version, sessionId, mode, durationSeconds, score]
+    KineticSoulsMatchResultReceipt:
+      type: object
+      properties:
+        accepted:
+          type: boolean
+          enum: [true]
+        duplicate:
+          type: boolean
+      required: [accepted, duplicate]
+    KineticSoulsLeaderboardEntry:
+      type: object
+      properties:
+        rank:
+          type: number
+          multipleOf: 1
+        displayName:
+          type: string
+        badgeName:
+          type: string
+        bestScore:
+          type: number
+          multipleOf: 1
+        matches:
+          type: number
+          multipleOf: 1
+      required: [rank, displayName, badgeName, bestScore, matches]
+    KineticSoulsLeaderboard:
+      type: object
+      properties:
+        generatedAt:
+          type: string
+          format: date-time
+        mode:
+          $ref: "#/components/schemas/KineticSoulsMatchMode"
+        disclaimer:
+          type: string
+          enum: ["Casual alpha records are client-reported and are not used for rewards."]
+        entries:
+          type: array
+          maxItems: 25
+          items:
+            $ref: "#/components/schemas/KineticSoulsLeaderboardEntry"
+      required: [generatedAt, mode, disclaimer, entries]
+    KineticSoulsAchievement:
+      type: object
+      properties:
+        id:
+          type: string
+          enum: [first-match, ten-matches, score-500, score-1000]
+        title:
+          type: string
+        description:
+          type: string
+        unlocked:
+          type: boolean
+      required: [id, title, description, unlocked]
+    KineticSoulsProgress:
+      type: object
+      properties:
+        matches:
+          type: number
+          minimum: 0
+          multipleOf: 1
+        bestScore:
+          type: number
+          minimum: 0
+          multipleOf: 1
+        achievements:
+          type: array
+          minItems: 4
+          maxItems: 4
+          items:
+            $ref: "#/components/schemas/KineticSoulsAchievement"
+      required: [matches, bestScore, achievements]
     LeaderboardMetric:
       type: object
       properties:

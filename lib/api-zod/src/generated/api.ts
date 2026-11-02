@@ -1151,6 +1151,93 @@ export const UpdateKineticSoulsSettingsResponse = zod.object({
 
 
 /**
+ * Results are client-reported and are not used for rewards.
+ * @summary Submit a casual Kinetic Souls match result
+ */
+export const submitKineticSoulsMatchResultBodySessionIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$');
+export const submitKineticSoulsMatchResultBodyDurationSecondsMin = 5;
+export const submitKineticSoulsMatchResultBodyDurationSecondsMax = 3600;
+export const submitKineticSoulsMatchResultBodyDurationSecondsMultipleOf = 1;
+
+export const submitKineticSoulsMatchResultBodyScoreMin = 0;
+export const submitKineticSoulsMatchResultBodyScoreMax = 1000000;
+export const submitKineticSoulsMatchResultBodyScoreMultipleOf = 1;
+
+
+
+export const SubmitKineticSoulsMatchResultBody = zod.object({
+  "version": zod.literal(1),
+  "sessionId": zod.string().regex(submitKineticSoulsMatchResultBodySessionIdRegExp),
+  "mode": zod.enum(['timer', 'score', 'horde', 'infection', 'unlimited', 'boss_rush']),
+  "durationSeconds": zod.number().min(submitKineticSoulsMatchResultBodyDurationSecondsMin).max(submitKineticSoulsMatchResultBodyDurationSecondsMax).multipleOf(submitKineticSoulsMatchResultBodyDurationSecondsMultipleOf),
+  "score": zod.number().min(submitKineticSoulsMatchResultBodyScoreMin).max(submitKineticSoulsMatchResultBodyScoreMax).multipleOf(submitKineticSoulsMatchResultBodyScoreMultipleOf)
+})
+
+export const SubmitKineticSoulsMatchResultResponse = zod.object({
+  "accepted": zod.literal(true),
+  "duplicate": zod.boolean()
+})
+
+
+/**
+ * Results are client-reported and are not used for rewards.
+ * @summary Get casual Kinetic Souls match records
+ */
+export const GetKineticSoulsLeaderboardQueryParams = zod.object({
+  "mode": zod.enum(['timer', 'score', 'horde', 'infection', 'unlimited', 'boss_rush']).optional()
+})
+
+export const getKineticSoulsLeaderboardResponseEntriesItemRankMultipleOf = 1;
+
+export const getKineticSoulsLeaderboardResponseEntriesItemBestScoreMultipleOf = 1;
+
+export const getKineticSoulsLeaderboardResponseEntriesItemMatchesMultipleOf = 1;
+
+export const getKineticSoulsLeaderboardResponseEntriesMax = 25;
+
+
+
+export const GetKineticSoulsLeaderboardResponse = zod.object({
+  "generatedAt": zod.coerce.date(),
+  "mode": zod.enum(['timer', 'score', 'horde', 'infection', 'unlimited', 'boss_rush']),
+  "disclaimer": zod.enum(['Casual alpha records are client-reported and are not used for rewards.']),
+  "entries": zod.array(zod.object({
+  "rank": zod.number().multipleOf(getKineticSoulsLeaderboardResponseEntriesItemRankMultipleOf),
+  "displayName": zod.string(),
+  "badgeName": zod.string(),
+  "bestScore": zod.number().multipleOf(getKineticSoulsLeaderboardResponseEntriesItemBestScoreMultipleOf),
+  "matches": zod.number().multipleOf(getKineticSoulsLeaderboardResponseEntriesItemMatchesMultipleOf)
+})).max(getKineticSoulsLeaderboardResponseEntriesMax)
+})
+
+
+/**
+ * @summary Get the signed-in player's Kinetic Souls 2 milestones
+ */
+export const getKineticSoulsProgressResponseMatchesMin = 0;
+export const getKineticSoulsProgressResponseMatchesMultipleOf = 1;
+
+export const getKineticSoulsProgressResponseBestScoreMin = 0;
+export const getKineticSoulsProgressResponseBestScoreMultipleOf = 1;
+
+export const getKineticSoulsProgressResponseAchievementsMin = 4;
+export const getKineticSoulsProgressResponseAchievementsMax = 4;
+
+
+
+export const GetKineticSoulsProgressResponse = zod.object({
+  "matches": zod.number().min(getKineticSoulsProgressResponseMatchesMin).multipleOf(getKineticSoulsProgressResponseMatchesMultipleOf),
+  "bestScore": zod.number().min(getKineticSoulsProgressResponseBestScoreMin).multipleOf(getKineticSoulsProgressResponseBestScoreMultipleOf),
+  "achievements": zod.array(zod.object({
+  "id": zod.enum(['first-match', 'ten-matches', 'score-500', 'score-1000']),
+  "title": zod.string(),
+  "description": zod.string(),
+  "unlocked": zod.boolean()
+})).min(getKineticSoulsProgressResponseAchievementsMin).max(getKineticSoulsProgressResponseAchievementsMax)
+})
+
+
+/**
  * @summary Star or unstar a game for this browser
  */
 export const toggleGameStarPathSlugMax = 120;

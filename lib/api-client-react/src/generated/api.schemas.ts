@@ -74,6 +74,99 @@ export interface KineticSoulsSettingsInput {
   modelStyle: KineticSoulsModelStyle;
 }
 
+export type KineticSoulsMatchMode = typeof KineticSoulsMatchMode[keyof typeof KineticSoulsMatchMode];
+
+
+export const KineticSoulsMatchMode = {
+  timer: 'timer',
+  score: 'score',
+  horde: 'horde',
+  infection: 'infection',
+  unlimited: 'unlimited',
+  boss_rush: 'boss_rush',
+} as const;
+
+export type KineticSoulsMatchResultInputVersion = typeof KineticSoulsMatchResultInputVersion[keyof typeof KineticSoulsMatchResultInputVersion];
+
+
+export const KineticSoulsMatchResultInputVersion = {
+  NUMBER_1: 1,
+} as const;
+
+export interface KineticSoulsMatchResultInput {
+  version: KineticSoulsMatchResultInputVersion;
+  /** @pattern ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$ */
+  sessionId: string;
+  mode: KineticSoulsMatchMode;
+  /**
+     * @minimum 5
+     * @maximum 3600
+     */
+  durationSeconds: number;
+  /**
+     * @minimum 0
+     * @maximum 1000000
+     */
+  score: number;
+}
+
+export interface KineticSoulsMatchResultReceipt {
+  accepted: true;
+  duplicate: boolean;
+}
+
+export interface KineticSoulsLeaderboardEntry {
+  rank: number;
+  displayName: string;
+  badgeName: string;
+  bestScore: number;
+  matches: number;
+}
+
+export type KineticSoulsLeaderboardDisclaimer = typeof KineticSoulsLeaderboardDisclaimer[keyof typeof KineticSoulsLeaderboardDisclaimer];
+
+
+export const KineticSoulsLeaderboardDisclaimer = {
+  'Casual_alpha_records_are_client-reported_and_are_not_used_for_rewards': 'Casual alpha records are client-reported and are not used for rewards.',
+} as const;
+
+export interface KineticSoulsLeaderboard {
+  generatedAt: string;
+  mode: KineticSoulsMatchMode;
+  disclaimer: KineticSoulsLeaderboardDisclaimer;
+  /** @maxItems 25 */
+  entries: KineticSoulsLeaderboardEntry[];
+}
+
+export type KineticSoulsAchievementId = typeof KineticSoulsAchievementId[keyof typeof KineticSoulsAchievementId];
+
+
+export const KineticSoulsAchievementId = {
+  'first-match': 'first-match',
+  'ten-matches': 'ten-matches',
+  'score-500': 'score-500',
+  'score-1000': 'score-1000',
+} as const;
+
+export interface KineticSoulsAchievement {
+  id: KineticSoulsAchievementId;
+  title: string;
+  description: string;
+  unlocked: boolean;
+}
+
+export interface KineticSoulsProgress {
+  /** @minimum 0 */
+  matches: number;
+  /** @minimum 0 */
+  bestScore: number;
+  /**
+     * @minItems 4
+     * @maxItems 4
+     */
+  achievements: KineticSoulsAchievement[];
+}
+
 export interface LeaderboardMetric {
   key: string;
   label: string;
@@ -552,5 +645,9 @@ export type GetGameSocialStatsParams = {
  * @maxLength 120
  */
 voterId?: string;
+};
+
+export type GetKineticSoulsLeaderboardParams = {
+mode?: KineticSoulsMatchMode;
 };
 
